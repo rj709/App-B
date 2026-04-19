@@ -65,6 +65,14 @@
     line-height: 1;
     letter-spacing: -1.5px;
   }
+  .hero-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: -6px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+  }
   .toolbar {
     display: flex;
     gap: 10px;
@@ -249,7 +257,8 @@
     </div>
     <div class="hero-stat">
       <div class="hero-label">Top Currency</div>
-      <div class="hero-value" id="top-currency" style="font-size:20px; letter-spacing:-0.3px;">—</div>
+      <div class="hero-value" id="top-currency-value">—</div>
+      <div class="hero-sub" id="top-currency-name"></div>
     </div>
   </div>
   <div class="toolbar">
@@ -1075,11 +1084,14 @@
       allByCurrency[cur].total += earned;
     }
     const top = Object.entries(allByCurrency).sort((a, b) => b[1].total - a[1].total)[0];
-    const topEl = document.getElementById("top-currency");
+    const topVal = document.getElementById("top-currency-value");
+    const topName = document.getElementById("top-currency-name");
     if (top) {
-      topEl.textContent = `${top[1].cashback ? fmtMoney(top[1].total) : fmtNum(top[1].total)} ${top[0]}`;
+      topVal.textContent = top[1].cashback ? fmtMoney(top[1].total) : fmtNum(top[1].total);
+      topName.textContent = top[0];
     } else {
-      topEl.textContent = "—";
+      topVal.textContent = "—";
+      topName.textContent = "";
     }
 
     const currEntries = Object.entries(byCurrency)
