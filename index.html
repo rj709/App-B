@@ -285,7 +285,7 @@
     ]},
     { label: "Travel", items: [
       "Airlines", "Hotels", "Vacation Rentals", "Car Rentals", "Cruises",
-      "Travel Portal (Flights)", "Travel Portal (Hotels/Cars)", "Other Travel"
+      "Travel Portal (Flights)", "Travel Portal (Hotels)", "Travel Portal (Cars)", "Other Travel"
     ]},
     { label: "Transportation", items: [
       "Gas Stations", "EV Charging", "Rideshare", "Taxis", "Transit", "Tolls & Parking"
@@ -328,7 +328,7 @@
       rules: {
         "Airlines": 5,
         "Travel Portal (Flights)": 5,
-        "Travel Portal (Hotels/Cars)": 5
+        "Travel Portal (Hotels)": 5, "Travel Portal (Cars)": 5
       }
     },
     {
@@ -340,7 +340,7 @@
         "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Bars": 3, "Food Delivery": 3,
         "Online Groceries": 3,
         "Streaming": 3,
-        "Travel Portal (Flights)": 5, "Travel Portal (Hotels/Cars)": 5,
+        "Travel Portal (Flights)": 5, "Travel Portal (Hotels)": 5, "Travel Portal (Cars)": 5,
         "Airlines": 2, "Hotels": 2, "Vacation Rentals": 2, "Car Rentals": 2, "Cruises": 2,
         "Rideshare": 2, "Taxis": 2, "Transit": 2, "Tolls & Parking": 2, "Other Travel": 2
       }
@@ -352,7 +352,7 @@
       base: 2,
       rules: {
         "Travel Portal (Flights)": 5,
-        "Travel Portal (Hotels/Cars)": 10
+        "Travel Portal (Hotels)": 10, "Travel Portal (Cars)": 10
       }
     },
     {
@@ -394,7 +394,7 @@
       rules: {
         "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Bars": 3, "Food Delivery": 3,
         "Drugstores": 3,
-        "Travel Portal (Flights)": 5, "Travel Portal (Hotels/Cars)": 5
+        "Travel Portal (Flights)": 5, "Travel Portal (Hotels)": 5, "Travel Portal (Cars)": 5
       }
     },
     {
@@ -423,7 +423,7 @@
     }
   ];
 
-  const STORAGE_KEY = "points-tracker-v3";
+  const STORAGE_KEY = "points-tracker-v4";
   let state = loadState();
 
   function loadState() {
