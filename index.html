@@ -27,20 +27,52 @@
     color: var(--text);
     line-height: 1.4;
   }
-  header {
-    padding: 24px 28px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 16px;
+  .brand {
+    padding: 22px 32px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    color: var(--muted);
+    text-transform: uppercase;
   }
-  header h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.3px; }
-  header .totals { display: flex; gap: 36px; flex-wrap: wrap; }
-  .stat { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-  .stat .label { font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 1.2px; font-weight: 600; }
-  .stat .value { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; }
+  .hero-panel {
+    margin: 0 28px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 36px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 24px;
+  }
+  .hero-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .hero-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-value {
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -1.5px;
+  }
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    padding: 18px 28px 0;
+    flex-wrap: wrap;
+  }
+  .toolbar button { padding: 9px 18px; font-size: 12px; }
+  header { padding: 0; }
   main {
     display: flex;
     flex-direction: column;
@@ -201,16 +233,29 @@
 </head>
 <body>
 <header>
-  <h1>Points Tracker</h1>
-  <div class="totals" id="header-totals">
-    <div class="stat"><span class="label">Total Spend</span><span class="value" id="total-spend">$0.00</span></div>
-    <div class="stat"><span class="label">Cards</span><span class="value" id="total-cards">0</span></div>
-    <div class="stat"><span class="label">Transactions</span><span class="value" id="total-txns">0</span></div>
-    <div style="display:flex; gap:8px; align-self:center; margin-left:8px;">
-      <button class="secondary" id="export-btn" type="button" style="padding:8px 14px; font-size:12px;">Export</button>
-      <button class="secondary" id="import-btn" type="button" style="padding:8px 14px; font-size:12px;">Import</button>
-      <input type="file" id="import-file" accept="application/json,.json" style="display:none;" />
+  <div class="brand">Points Tracker</div>
+  <div class="hero-panel">
+    <div class="hero-stat">
+      <div class="hero-label">Total Spend</div>
+      <div class="hero-value" id="total-spend">$0.00</div>
     </div>
+    <div class="hero-stat">
+      <div class="hero-label">Cards</div>
+      <div class="hero-value" id="total-cards">0</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-label">Transactions</div>
+      <div class="hero-value" id="total-txns">0</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-label">Top Currency</div>
+      <div class="hero-value" id="top-currency" style="font-size:20px; letter-spacing:-0.3px;">—</div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <button class="secondary" id="export-btn" type="button">Export</button>
+    <button class="secondary" id="import-btn" type="button">Import</button>
+    <input type="file" id="import-file" accept="application/json,.json" style="display:none;" />
   </div>
 </header>
 
@@ -1019,6 +1064,23 @@
     document.getElementById("total-spend").textContent = fmtMoney(allTimeSpend);
     document.getElementById("total-cards").textContent = state.cards.length;
     document.getElementById("total-txns").textContent = state.transactions.length;
+
+    const allByCurrency = {};
+    for (const t of state.transactions) {
+      const card = state.cards.find(c => c.id === t.cardId);
+      if (!card) continue;
+      const earned = earnedFor(card, t.category, t.amount);
+      const cur = card.currency || "Points";
+      if (!allByCurrency[cur]) allByCurrency[cur] = { total: 0, cashback: isCashback(card) };
+      allByCurrency[cur].total += earned;
+    }
+    const top = Object.entries(allByCurrency).sort((a, b) => b[1].total - a[1].total)[0];
+    const topEl = document.getElementById("top-currency");
+    if (top) {
+      topEl.textContent = `${top[1].cashback ? fmtMoney(top[1].total) : fmtNum(top[1].total)} ${top[0]}`;
+    } else {
+      topEl.textContent = "—";
+    }
 
     const currEntries = Object.entries(byCurrency)
       .filter(([, v]) => v.total > 0)
