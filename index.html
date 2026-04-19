@@ -177,6 +177,26 @@
     margin-bottom: 14px;
   }
   .section-header h2 { margin: 0; }
+  .range-toggle {
+    display: inline-flex;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .range-toggle button {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    padding: 5px 12px;
+    font-size: 11px;
+    border-radius: 0;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .range-toggle button.active { background: var(--accent); color: #0b0d12; }
+  .range-toggle button:hover:not(.active) { color: var(--text); }
 </style>
 </head>
 <body>
@@ -297,7 +317,14 @@
   </section>
 
   <section class="panel">
-    <h2>Points by Currency</h2>
+    <div class="section-header">
+      <h2>Points by Currency</h2>
+      <div class="range-toggle" id="range-toggle">
+        <button data-range="all">All</button>
+        <button data-range="ytd">YTD</button>
+        <button data-range="mtd">MTD</button>
+      </div>
+    </div>
     <table>
       <thead>
         <tr>
@@ -878,6 +905,22 @@
   });
   applyTxnsVisibility();
 
+  function applyRangeToggle() {
+    const range = state.summaryRange || "all";
+    document.querySelectorAll("#range-toggle button").forEach(b => {
+      b.classList.toggle("active", b.getAttribute("data-range") === range);
+    });
+  }
+  document.querySelectorAll("#range-toggle button").forEach(b => {
+    b.addEventListener("click", () => {
+      state.summaryRange = b.getAttribute("data-range");
+      saveState();
+      applyRangeToggle();
+      renderSummary();
+    });
+  });
+  applyRangeToggle();
+
   function renderTransactions() {
     const tbody = document.getElementById("txn-rows");
     const empty = document.getElementById("txn-empty");
@@ -915,10 +958,22 @@
     });
   }
 
+  function inRange(dateStr, range) {
+    if (range === "all" || !range) return true;
+    const now = new Date();
+    if (range === "ytd") return dateStr >= `${now.getFullYear()}-01-01`;
+    if (range === "mtd") {
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      return dateStr >= `${now.getFullYear()}-${m}-01`;
+    }
+    return true;
+  }
   function renderSummary() {
     const tbody = document.getElementById("summary-rows");
     const totals = {};
+    const range = state.summaryRange || "all";
     for (const t of state.transactions) {
+      if (!inRange(t.date, range)) continue;
       if (!totals[t.cardId]) totals[t.cardId] = { spend: 0, points: 0 };
       const card = state.cards.find(c => c.id === t.cardId);
       const earned = card ? earnedFor(card, t.category, t.amount) : t.points;
@@ -947,12 +1002,8 @@
     }).join("");
     tbody.innerHTML = rows;
 
-    for (const cardId in totals) {
-      if (!state.cards.find(c => c.id === cardId)) {
-        totalSpend += totals[cardId].spend;
-      }
-    }
-    document.getElementById("total-spend").textContent = fmtMoney(totalSpend);
+    const allTimeSpend = state.transactions.reduce((s, t) => s + t.amount, 0);
+    document.getElementById("total-spend").textContent = fmtMoney(allTimeSpend);
     document.getElementById("total-cards").textContent = state.cards.length;
     document.getElementById("total-txns").textContent = state.transactions.length;
 
