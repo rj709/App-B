@@ -233,6 +233,7 @@
         <button class="secondary" id="add-rule-row" type="button">+ Category rule</button>
         <div class="actions">
           <button id="save-new-card">Save Card</button>
+          <button class="secondary" id="cancel-edit" type="button" style="display:none;">Cancel</button>
         </div>
       </div>
     </details>
@@ -630,7 +631,10 @@
         <div class="card-item">
           <div class="card-item-header">
             <span class="card-item-name">${card.name} <span class="tag">${currency}</span></span>
-            <button class="danger" data-del-card="${card.id}">Remove</button>
+            <span style="display:flex; gap:6px;">
+              <button class="secondary" data-edit-card="${card.id}" style="padding:4px 8px; font-size:12px;">Edit</button>
+              <button class="danger" data-del-card="${card.id}">Remove</button>
+            </span>
           </div>
           <div class="card-item-summary">Base: <strong>${card.base}x</strong> on everything else</div>
           <div class="rules">${rules || '<span class="rule">no bonus categories</span>'}</div>
@@ -642,11 +646,46 @@
         const id = btn.getAttribute("data-del-card");
         if (!confirm("Remove this card? Its transactions will stay but show as 'Unknown card'.")) return;
         state.cards = state.cards.filter(c => c.id !== id);
+        if (editingCardId === id) cancelEdit();
         saveState();
         renderAll();
       });
     });
+    list.querySelectorAll("[data-edit-card]").forEach(btn => {
+      btn.addEventListener("click", () => startEditCard(btn.getAttribute("data-edit-card")));
+    });
   }
+
+  let editingCardId = null;
+  function startEditCard(id) {
+    const card = state.cards.find(c => c.id === id);
+    if (!card) return;
+    editingCardId = id;
+    document.getElementById("new-card-name").value = card.name;
+    document.getElementById("new-card-base").value = card.base;
+    document.getElementById("new-card-currency").value = card.currency || "";
+    document.getElementById("new-card-rules").innerHTML = "";
+    for (const [cat, mult] of Object.entries(card.rules || {})) {
+      addRuleRow(cat, mult);
+    }
+    document.getElementById("save-new-card").textContent = "Update Card";
+    document.getElementById("cancel-edit").style.display = "inline-block";
+    const details = document.querySelector("details");
+    details.open = true;
+    details.querySelector("summary").textContent = `Editing: ${card.name}`;
+    details.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  function cancelEdit() {
+    editingCardId = null;
+    document.getElementById("new-card-name").value = "";
+    document.getElementById("new-card-base").value = "1";
+    document.getElementById("new-card-currency").value = "";
+    document.getElementById("new-card-rules").innerHTML = "";
+    document.getElementById("save-new-card").textContent = "Save Card";
+    document.getElementById("cancel-edit").style.display = "none";
+    document.querySelector("details summary").textContent = "+ Add custom card";
+  }
+  document.getElementById("cancel-edit").addEventListener("click", cancelEdit);
 
   function renderTransactions() {
     const tbody = document.getElementById("txn-rows");
@@ -812,13 +851,15 @@
       const mult = parseFloat(row.querySelector("input").value);
       if (cat && isFinite(mult) && mult > 0) rules[cat] = mult;
     });
-    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now().toString(36);
-    state.cards.push({ id, name, currency, base, rules });
+    if (editingCardId) {
+      const idx = state.cards.findIndex(c => c.id === editingCardId);
+      if (idx !== -1) state.cards[idx] = { id: editingCardId, name, currency, base, rules };
+    } else {
+      const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now().toString(36);
+      state.cards.push({ id, name, currency, base, rules });
+    }
+    cancelEdit();
     saveState();
-    document.getElementById("new-card-name").value = "";
-    document.getElementById("new-card-base").value = "1";
-    document.getElementById("new-card-currency").value = "";
-    document.getElementById("new-card-rules").innerHTML = "";
     renderAll();
   });
 
