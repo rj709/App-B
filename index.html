@@ -3,21 +3,30 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>Card Stack</title>
 <style>
   :root {
     --bg: #000000;
-    --panel: #0e0e11;
-    --panel-2: #18181c;
-    --panel-3: #25252a;
-    --border: rgba(255,255,255,0.06);
-    --text: #ffffff;
-    --muted: #6b6b75;
-    --accent: #e4e4e7;
-    --accent-2: #ffffff;
-    --danger: #f87171;
-    --good: #34d399;
-    --warn: #fbbf24;
+    --surface: #0a0a0b;
+    --surface-2: #27272a;
+    --border: #1c1c1f;
+    --text: #fafafa;
+    --muted: #a1a1aa;
+    --accent: #3f3f46;
+    --good: #10b981;
+    --warn: #f59e0b;
+    --bad: #ef4444;
+    --radius: 16px;
+
+    /* aliases for existing CSS */
+    --panel: var(--surface);
+    --panel-2: var(--surface-2);
+    --panel-3: var(--surface-2);
+    --accent-2: var(--text);
+    --danger: var(--bad);
   }
   * { box-sizing: border-box; }
   body {
@@ -37,9 +46,9 @@
   }
   .page-header h1 {
     margin: 0;
-    font-size: 38px;
+    font-size: 2.5rem;
     font-weight: 700;
-    letter-spacing: -1px;
+    letter-spacing: -0.03em;
   }
   .page-header .subtitle {
     margin: 8px 0 0;
@@ -92,10 +101,11 @@
     border-bottom: 1px solid var(--border);
   }
   .hero-value {
-    font-size: 44px;
+    font-size: 2.5rem;
     font-weight: 700;
     line-height: 1;
-    letter-spacing: -1.5px;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
   }
   .hero-sub {
     font-size: 12px;
@@ -154,8 +164,8 @@
     cursor: pointer;
     font: inherit;
     background: var(--accent);
-    color: #0b0d12;
-    border: none;
+    color: var(--text);
+    border: 1px solid var(--border);
     border-radius: 10px;
     font-weight: 600;
     width: auto;
@@ -249,6 +259,45 @@
     margin-bottom: 14px;
   }
   .section-header h2 { margin: 0; }
+
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-scroll table { min-width: 480px; }
+
+  @media (max-width: 640px) {
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 24px 20px 20px;
+      gap: 16px;
+    }
+    .page-header h1 { font-size: 1.75rem; }
+    .page-header .subtitle { font-size: 14px; }
+    .page-header-right {
+      align-items: flex-start;
+      width: 100%;
+    }
+    .last-updated { text-align: left; }
+    .header-buttons { flex-wrap: wrap; width: 100%; }
+    .header-buttons button { flex: 1; min-width: 120px; padding: 10px 16px; }
+    .hero-panel {
+      margin: 0 20px;
+      padding: 20px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+    .hero-value { font-size: 1.5rem; letter-spacing: -0.02em; }
+    .hero-label { padding-bottom: 10px; font-size: 10px; }
+    main { padding: 16px 20px; gap: 14px; }
+    .panel { padding: 14px; border-radius: 14px; }
+    .card-grid { grid-template-columns: 1fr; gap: 10px; }
+    .card-item { padding: 12px 14px; }
+    .card-item-name { font-size: 15px; }
+    .card-stats .col .v { font-size: 15px; }
+    .section-header { flex-wrap: wrap; gap: 8px; }
+    .range-toggle button { padding: 5px 10px; font-size: 10px; }
+    table { font-size: 12px; }
+    th, td { padding: 8px 6px; }
+  }
   .range-toggle {
     display: inline-flex;
     background: var(--panel-2);
@@ -267,7 +316,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  .range-toggle button.active { background: var(--accent); color: #0b0d12; }
+  .range-toggle button.active { background: var(--accent); color: var(--text); }
   .range-toggle button:hover:not(.active) { color: var(--text); }
 </style>
 </head>
@@ -427,15 +476,17 @@
         <button data-range="mtd">MTD</button>
       </div>
     </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Currency</th>
-          <th class="num">Points</th>
-        </tr>
-      </thead>
-      <tbody id="currency-rows"></tbody>
-    </table>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Currency</th>
+            <th class="num">Points</th>
+          </tr>
+        </thead>
+        <tbody id="currency-rows"></tbody>
+      </table>
+    </div>
     <div class="empty" id="currency-empty">Log a transaction to see totals.</div>
 
     <div class="section-header" style="margin-top:24px;">
@@ -443,18 +494,20 @@
       <button class="secondary" id="toggle-summary" type="button" style="padding:4px 12px; font-size:11px;">Hide</button>
     </div>
     <div id="summary-section">
-    <table style="margin-top:12px;">
-      <thead>
-        <tr>
-          <th>Card</th>
-          <th>Currency</th>
-          <th class="num">Spend</th>
-          <th class="num">Points</th>
-          <th class="num">Avg x</th>
-        </tr>
-      </thead>
-      <tbody id="summary-rows"></tbody>
-    </table>
+    <div class="table-scroll" style="margin-top:12px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Card</th>
+            <th>Currency</th>
+            <th class="num">Spend</th>
+            <th class="num">Points</th>
+            <th class="num">Avg x</th>
+          </tr>
+        </thead>
+        <tbody id="summary-rows"></tbody>
+      </table>
+    </div>
     </div>
 
     <div class="section-header" style="margin-top:24px;">
@@ -462,20 +515,22 @@
       <button class="secondary" id="toggle-txns" type="button" style="padding:4px 12px; font-size:11px;">Hide</button>
     </div>
     <div id="txns-section">
-    <table id="txn-table" style="margin-top:12px;">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Card</th>
-          <th>Category</th>
-          <th>Note</th>
-          <th class="num">Amount</th>
-          <th class="num">Points</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="txn-rows"></tbody>
-    </table>
+    <div class="table-scroll" style="margin-top:12px;">
+      <table id="txn-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Card</th>
+            <th>Category</th>
+            <th>Note</th>
+            <th class="num">Amount</th>
+            <th class="num">Points</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="txn-rows"></tbody>
+      </table>
+    </div>
     <div class="empty" id="txn-empty">No transactions yet. Add one on the left.</div>
     </div>
   </section>
