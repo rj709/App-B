@@ -6,151 +6,264 @@
 <title>Points Tracker</title>
 <style>
   :root {
-    --bg: #0f1115;
-    --panel: #171a21;
-    --panel-2: #1f232c;
-    --border: #2a2f3a;
-    --text: #e7ebf0;
-    --muted: #8a94a6;
-    --accent: #5eead4;
-    --accent-2: #7dd3fc;
+    --bg: #0a0e1a;
+    --panel: #131826;
+    --panel-2: #1a2031;
+    --panel-3: #232a3d;
+    --border: #242b3d;
+    --text: #e7ebf2;
+    --muted: #7c879b;
+    --accent: #818cf8;
+    --accent-2: #a5b4fc;
     --danger: #f87171;
     --good: #34d399;
+    --warn: #fbbf24;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     background: var(--bg);
     color: var(--text);
     line-height: 1.4;
   }
   header {
-    padding: 20px 24px;
+    padding: 24px 28px;
     border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 16px;
   }
-  header h1 { margin: 0; font-size: 20px; letter-spacing: 0.3px; }
-  header .totals { display: flex; gap: 20px; flex-wrap: wrap; }
-  .stat { display: flex; flex-direction: column; align-items: flex-end; }
-  .stat .label { font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.8px; }
-  .stat .value { font-size: 18px; font-weight: 600; }
+  header h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.3px; }
+  header .totals { display: flex; gap: 36px; flex-wrap: wrap; }
+  .stat { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .stat .label { font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 1.2px; font-weight: 600; }
+  .stat .value { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; }
   main {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
-    padding: 20px 24px;
+    padding: 20px 28px;
   }
-  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .columns {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 980px) { .columns { grid-template-columns: 1fr; } }
   .panel {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
+    border-radius: 14px;
+    padding: 18px;
   }
   .panel h2 {
-    margin: 0 0 12px 0;
-    font-size: 14px;
+    margin: 0 0 14px 0;
+    font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
     color: var(--muted);
+    font-weight: 700;
   }
-  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-  input, select, textarea, button {
+  label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
+  input, select, textarea {
     font: inherit;
     color: var(--text);
     background: var(--panel-2);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 8px 10px;
+    border-radius: 8px;
+    padding: 9px 11px;
     width: 100%;
   }
-  input:focus, select:focus, textarea:focus { outline: 1px solid var(--accent-2); }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
   button {
     cursor: pointer;
+    font: inherit;
     background: var(--accent);
     color: #0b0d12;
     border: none;
+    border-radius: 10px;
     font-weight: 600;
     width: auto;
-    padding: 9px 14px;
+    padding: 10px 16px;
   }
+  button:hover { filter: brightness(1.08); }
   button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
-  button.danger { background: transparent; color: var(--danger); border: 1px solid var(--border); padding: 4px 8px; font-size: 12px; }
+  button.danger { background: transparent; color: var(--danger); border: 1px solid var(--border); padding: 5px 10px; font-size: 12px; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .row-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
-  .field { margin-bottom: 10px; }
-  .card-list { display: flex; flex-direction: column; gap: 10px; }
+  .field { margin-bottom: 12px; }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
   .card-item {
     background: var(--panel-2);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
+    border-left: 5px solid var(--accent);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
   .card-item-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
+    align-items: flex-start;
+    gap: 8px;
   }
-  .card-item-name { font-weight: 600; }
-  .card-item-summary { font-size: 12px; color: var(--muted); }
-  .rules { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .card-item-name { font-size: 16px; font-weight: 700; line-height: 1.2; }
+  .card-item-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .card-actions button { padding: 4px 9px; font-size: 11px; border-radius: 6px; }
+  .card-stats { display: flex; gap: 18px; padding: 4px 0; }
+  .card-stats .col .l { font-size: 9px; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; font-weight: 600; }
+  .card-stats .col .v { font-size: 16px; font-weight: 700; margin-top: 2px; }
+  .card-stats .col .v.pts { color: var(--accent-2); }
+  .rules { display: flex; flex-wrap: wrap; gap: 5px; }
   .rule {
     font-size: 11px;
-    background: #0b0d12;
+    background: rgba(0,0,0,0.25);
     border: 1px solid var(--border);
-    padding: 3px 6px;
-    border-radius: 4px;
+    padding: 3px 7px;
+    border-radius: 999px;
     color: var(--muted);
   }
-  .rule strong { color: var(--accent); }
+  .rule strong { color: var(--accent-2); font-weight: 700; }
+
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
-  th { font-weight: 500; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); }
+  th { font-weight: 600; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  .pts { color: var(--accent); font-weight: 600; }
-  .empty { color: var(--muted); font-size: 13px; font-style: italic; padding: 12px 0; }
+  .pts { color: var(--accent-2); font-weight: 700; }
+  .empty { color: var(--muted); font-size: 13px; font-style: italic; padding: 14px 0; }
   .preview {
     margin-top: 6px;
-    padding: 8px 10px;
-    background: #0b0d12;
-    border: 1px dashed var(--border);
-    border-radius: 6px;
+    padding: 10px 12px;
+    background: rgba(129,140,248,0.08);
+    border: 1px solid rgba(129,140,248,0.25);
+    border-radius: 8px;
     font-size: 13px;
-    min-height: 20px;
+    min-height: 22px;
   }
   .preview .pts { font-size: 15px; }
-  details { margin-top: 10px; }
-  details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+  details { margin-top: 12px; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 12px; padding: 6px 0; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
   .rule-editor { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
   .rule-editor-row { display: grid; grid-template-columns: 2fr 1fr auto; gap: 6px; align-items: end; }
   .rule-editor-row input { padding: 6px 8px; font-size: 13px; }
-  .actions { display: flex; gap: 8px; margin-top: 10px; }
+  .actions { display: flex; gap: 8px; margin-top: 12px; }
   .tag {
     display: inline-block;
-    font-size: 11px;
-    background: var(--panel-2);
+    font-size: 10px;
+    background: var(--panel-3);
     border: 1px solid var(--border);
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 3px 8px;
+    border-radius: 999px;
     color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
   }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .section-header h2 { margin: 0; }
 </style>
 </head>
 <body>
 <header>
   <h1>Points Tracker</h1>
   <div class="totals" id="header-totals">
-    <div class="stat"><span class="label">Spend</span><span class="value" id="total-spend">$0.00</span></div>
+    <div class="stat"><span class="label">Total Spend</span><span class="value" id="total-spend">$0.00</span></div>
+    <div class="stat"><span class="label">Cards</span><span class="value" id="total-cards">0</span></div>
+    <div class="stat"><span class="label">Transactions</span><span class="value" id="total-txns">0</span></div>
   </div>
 </header>
 
 <main>
+  <section class="panel">
+    <div class="section-header">
+      <h2>Your Cards</h2>
+      <button class="secondary" id="toggle-cards" type="button" style="padding:4px 12px; font-size:11px;">Hide</button>
+    </div>
+    <div id="cards-section">
+      <div class="card-grid" id="card-list"></div>
+      <details>
+        <summary>+ Add custom card</summary>
+        <div class="rule-editor">
+          <div class="field">
+            <label for="new-card-name">Card name</label>
+            <input type="text" id="new-card-name" placeholder="e.g., Chase Freedom Unlimited" />
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="new-card-type">Reward type</label>
+              <select id="new-card-type">
+                <option value="points">Points / miles (x)</option>
+                <option value="cashback">Cash back (%)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="new-card-base"><span id="new-card-base-label">Base multiplier (x per $1)</span></label>
+              <input type="number" id="new-card-base" step="0.5" min="0" value="1" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="new-card-currency">Points currency</label>
+              <input type="text" id="new-card-currency" list="currency-list" placeholder="e.g., Amex MR" />
+              <datalist id="currency-list">
+                <option value="Amex MR"></option>
+                <option value="Chase UR"></option>
+                <option value="Capital One Miles"></option>
+                <option value="Citi TY"></option>
+                <option value="Bilt"></option>
+                <option value="Cash Back"></option>
+                <option value="Hilton Honors"></option>
+                <option value="Marriott Bonvoy"></option>
+                <option value="World of Hyatt"></option>
+                <option value="IHG One Rewards"></option>
+                <option value="Delta SkyMiles"></option>
+                <option value="United MileagePlus"></option>
+                <option value="American AAdvantage"></option>
+                <option value="Southwest Rapid Rewards"></option>
+                <option value="Alaska Mileage Plan"></option>
+                <option value="JetBlue TrueBlue"></option>
+                <option value="Amtrak Guest Rewards"></option>
+                <option value="Rakuten Cash Back"></option>
+              </datalist>
+            </div>
+          </div>
+          <label>Category multipliers</label>
+          <div id="new-card-rules"></div>
+          <div style="display:flex; gap:8px; margin-top:6px;">
+            <button class="secondary" id="add-rule-row" type="button">+ Category rule</button>
+            <button class="secondary" id="toggle-group-add" type="button">+ Whole group</button>
+          </div>
+          <div id="group-add-row" style="display:none; margin-top:8px; gap:6px; align-items:end; grid-template-columns:2fr 1fr auto;">
+            <div><label style="font-size:11px;">Group</label><select id="group-select"></select></div>
+            <div><label style="font-size:11px;">x per $1</label><input id="group-mult" type="number" step="0.5" min="0" placeholder="e.g., 3" /></div>
+            <button class="secondary" id="apply-group" type="button">Add all</button>
+          </div>
+          <div class="actions">
+            <button id="save-new-card">Save Card</button>
+            <button class="secondary" id="cancel-edit" type="button" style="display:none;">Cancel</button>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <div class="columns">
   <section class="panel">
     <h2>Add Transaction</h2>
     <div class="field">
@@ -181,77 +294,6 @@
     <div class="actions">
       <button id="txn-add">Add Transaction</button>
     </div>
-
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:24px;">
-      <h2 style="margin:0;">Your Cards</h2>
-      <button class="secondary" id="toggle-cards" type="button" style="padding:4px 10px; font-size:12px;">Hide</button>
-    </div>
-    <div id="cards-section">
-    <div class="card-list" id="card-list" style="margin-top:12px;"></div>
-    <details>
-      <summary>+ Add custom card</summary>
-      <div class="rule-editor">
-        <div class="field">
-          <label for="new-card-name">Card name</label>
-          <input type="text" id="new-card-name" placeholder="e.g., Chase Freedom Unlimited" />
-        </div>
-        <div class="row">
-          <div class="field">
-            <label for="new-card-type">Reward type</label>
-            <select id="new-card-type">
-              <option value="points">Points / miles (x)</option>
-              <option value="cashback">Cash back (%)</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="new-card-base"><span id="new-card-base-label">Base multiplier (x per $1)</span></label>
-            <input type="number" id="new-card-base" step="0.5" min="0" value="1" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label for="new-card-currency">Points currency</label>
-            <input type="text" id="new-card-currency" list="currency-list" placeholder="e.g., Amex MR" />
-            <datalist id="currency-list">
-              <option value="Amex MR"></option>
-              <option value="Chase UR"></option>
-              <option value="Capital One Miles"></option>
-              <option value="Citi TY"></option>
-              <option value="Bilt"></option>
-              <option value="Cash Back"></option>
-              <option value="Hilton Honors"></option>
-              <option value="Marriott Bonvoy"></option>
-              <option value="World of Hyatt"></option>
-              <option value="IHG One Rewards"></option>
-              <option value="Delta SkyMiles"></option>
-              <option value="United MileagePlus"></option>
-              <option value="American AAdvantage"></option>
-              <option value="Southwest Rapid Rewards"></option>
-              <option value="Alaska Mileage Plan"></option>
-              <option value="JetBlue TrueBlue"></option>
-              <option value="Amtrak Guest Rewards"></option>
-              <option value="Rakuten Cash Back"></option>
-            </datalist>
-          </div>
-        </div>
-        <label>Category multipliers</label>
-        <div id="new-card-rules"></div>
-        <div style="display:flex; gap:8px; margin-top:6px;">
-          <button class="secondary" id="add-rule-row" type="button">+ Category rule</button>
-          <button class="secondary" id="toggle-group-add" type="button">+ Whole group</button>
-        </div>
-        <div id="group-add-row" style="display:none; margin-top:8px; gap:6px; align-items:end; grid-template-columns:2fr 1fr auto;">
-          <div><label style="font-size:11px;">Group</label><select id="group-select"></select></div>
-          <div><label style="font-size:11px;">x per $1</label><input id="group-mult" type="number" step="0.5" min="0" placeholder="e.g., 3" /></div>
-          <button class="secondary" id="apply-group" type="button">Add all</button>
-        </div>
-        <div class="actions">
-          <button id="save-new-card">Save Card</button>
-          <button class="secondary" id="cancel-edit" type="button" style="display:none;">Cancel</button>
-        </div>
-      </div>
-    </details>
-    </div>
   </section>
 
   <section class="panel">
@@ -267,9 +309,9 @@
     </table>
     <div class="empty" id="currency-empty">Log a transaction to see totals.</div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:24px;">
-      <h2 style="margin:0;">Per-Card Totals</h2>
-      <button class="secondary" id="toggle-summary" type="button" style="padding:4px 10px; font-size:12px;">Hide</button>
+    <div class="section-header" style="margin-top:24px;">
+      <h2>Per-Card Totals</h2>
+      <button class="secondary" id="toggle-summary" type="button" style="padding:4px 12px; font-size:11px;">Hide</button>
     </div>
     <div id="summary-section">
     <table style="margin-top:12px;">
@@ -286,9 +328,9 @@
     </table>
     </div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:24px;">
-      <h2 style="margin:0;">Transactions</h2>
-      <button class="secondary" id="toggle-txns" type="button" style="padding:4px 10px; font-size:12px;">Hide</button>
+    <div class="section-header" style="margin-top:24px;">
+      <h2>Transactions</h2>
+      <button class="secondary" id="toggle-txns" type="button" style="padding:4px 12px; font-size:11px;">Hide</button>
     </div>
     <div id="txns-section">
     <table id="txn-table" style="margin-top:12px;">
@@ -308,6 +350,7 @@
     <div class="empty" id="txn-empty">No transactions yet. Add one on the left.</div>
     </div>
   </section>
+  </div>
 </main>
 
 <script>
@@ -676,25 +719,66 @@
     sel.innerHTML = categoryOptionsHTML();
   }
 
+  function cardColor(card) {
+    const n = (card.name || "").toLowerCase();
+    if (n.includes("platinum")) return "#cbd5e1";
+    if (n.includes("gold")) return "#fbbf24";
+    if (n.includes("green")) return "#34d399";
+    if (n.includes("delta")) return "#a78bfa";
+    if (n.includes("hilton")) return "#60a5fa";
+    if (n.includes("marriott")) return "#f87171";
+    if (n.includes("ihg")) return "#4ade80";
+    if (n.includes("amtrak")) return "#3b82f6";
+    if (n.includes("apple")) return "#e2e8f0";
+    if (n.includes("rakuten")) return "#dc2626";
+    if (n.includes("bilt")) return "#94a3b8";
+    if (n.includes("td")) return "#15803d";
+    if (n.includes("u.s. bank") || n.includes("us bank")) return "#dc2626";
+    if (n.includes("chase") || n.includes("freedom") || n.includes("sapphire")) return "#3b82f6";
+    if (n.includes("citi")) return "#0ea5e9";
+    if (n.includes("venture") || n.includes("capital one")) return "#fb923c";
+    if (n.includes("blue cash")) return "#60a5fa";
+    if (n.includes("amex") || n.includes("american express")) return "#818cf8";
+    return "#818cf8";
+  }
   function renderCards() {
     const list = document.getElementById("card-list");
+    const totalsByCard = {};
+    for (const t of state.transactions) {
+      if (!totalsByCard[t.cardId]) totalsByCard[t.cardId] = { spend: 0, points: 0 };
+      const c = state.cards.find(c => c.id === t.cardId);
+      const earned = c ? earnedFor(c, t.category, t.amount) : t.points;
+      totalsByCard[t.cardId].spend += t.amount;
+      totalsByCard[t.cardId].points += earned;
+    }
     list.innerHTML = sortedCards().map(card => {
+      const symbol = isCashback(card) ? "%" : "x";
       const rules = Object.entries(card.rules || {})
         .sort((a, b) => b[1] - a[1])
-        .map(([cat, m]) => `<span class="rule"><strong>${m}x</strong> ${cat}</span>`)
+        .slice(0, 8)
+        .map(([cat, m]) => `<span class="rule"><strong>${m}${symbol}</strong> ${cat}</span>`)
         .join("");
+      const more = Object.keys(card.rules || {}).length - 8;
+      const moreTag = more > 0 ? `<span class="rule">+${more} more</span>` : "";
       const currency = card.currency || "Points";
+      const t = totalsByCard[card.id] || { spend: 0, points: 0 };
       return `
-        <div class="card-item">
+        <div class="card-item" style="border-left-color:${cardColor(card)};">
           <div class="card-item-header">
-            <span class="card-item-name">${card.name} <span class="tag">${currency}</span></span>
-            <span style="display:flex; gap:6px;">
-              <button class="secondary" data-edit-card="${card.id}" style="padding:4px 8px; font-size:12px;">Edit</button>
-              <button class="danger" data-del-card="${card.id}">Remove</button>
-            </span>
+            <div>
+              <div class="card-item-name">${card.name}</div>
+              <div class="card-item-sub">${currency} · base ${card.base}${symbol}</div>
+            </div>
+            <div class="card-actions">
+              <button class="secondary" data-edit-card="${card.id}">Edit</button>
+              <button class="danger" data-del-card="${card.id}">×</button>
+            </div>
           </div>
-          <div class="card-item-summary">Base: <strong>${card.base}x</strong> on everything else</div>
-          <div class="rules">${rules || '<span class="rule">no bonus categories</span>'}</div>
+          <div class="card-stats">
+            <div class="col"><div class="l">Spend</div><div class="v">${fmtMoney(t.spend)}</div></div>
+            <div class="col"><div class="l">Earned</div><div class="v pts">${fmtEarned(card, t.points)}</div></div>
+          </div>
+          <div class="rules">${rules || '<span class="rule">no bonus categories</span>'}${moreTag}</div>
         </div>
       `;
     }).join("");
@@ -867,6 +951,8 @@
       }
     }
     document.getElementById("total-spend").textContent = fmtMoney(totalSpend);
+    document.getElementById("total-cards").textContent = state.cards.length;
+    document.getElementById("total-txns").textContent = state.transactions.length;
 
     const currEntries = Object.entries(byCurrency)
       .filter(([, v]) => v.total > 0)
