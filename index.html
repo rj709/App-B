@@ -642,12 +642,16 @@
   }
   function fmtNum(n) { return n.toLocaleString(); }
 
+  function sortedCards() {
+    return state.cards.slice().sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   function renderCardSelect() {
     const sel = document.getElementById("txn-card");
     const prev = sel.value;
     sel.innerHTML =
       `<option value="">— Select card —</option>` +
-      state.cards.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
+      sortedCards().map(c => `<option value="${c.id}">${c.name}</option>`).join("");
     sel.value = prev || "";
   }
   function categoryOptionsHTML(selected = "") {
@@ -664,7 +668,7 @@
 
   function renderCards() {
     const list = document.getElementById("card-list");
-    list.innerHTML = state.cards.map(card => {
+    list.innerHTML = sortedCards().map(card => {
       const rules = Object.entries(card.rules || {})
         .sort((a, b) => b[1] - a[1])
         .map(([cat, m]) => `<span class="rule"><strong>${m}x</strong> ${cat}</span>`)
@@ -803,7 +807,7 @@
     }
     let totalSpend = 0;
     const byCurrency = {};
-    const rows = state.cards.map(card => {
+    const rows = sortedCards().map(card => {
       const t = totals[card.id] || { spend: 0, points: 0 };
       totalSpend += t.spend;
       const currency = card.currency || "Points";
