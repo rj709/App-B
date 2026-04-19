@@ -188,13 +188,6 @@
     </div>
     <div id="cards-section">
     <div class="card-list" id="card-list" style="margin-top:12px;"></div>
-    <div class="field" style="margin-top:12px;">
-      <label for="template-select">Quick add</label>
-      <div style="display:flex; gap:8px;">
-        <select id="template-select" style="flex:1;"></select>
-        <button id="template-add" class="secondary" type="button">Add</button>
-      </div>
-    </div>
     <details>
       <summary>+ Add custom card</summary>
       <div class="rule-editor">
@@ -820,7 +813,6 @@
   function renderAll() {
     renderCardSelect();
     renderCategorySelect();
-    renderTemplateSelect();
     renderCards();
     renderTransactions();
     renderSummary();
@@ -839,31 +831,6 @@
     div.querySelector("button").addEventListener("click", () => div.remove());
     container.appendChild(div);
   }
-
-  function renderTemplateSelect() {
-    const sel = document.getElementById("template-select");
-    const owned = new Set(state.cards.map(c => c.id));
-    const available = CARD_TEMPLATES.filter(t => !owned.has(t.id));
-    if (available.length === 0) {
-      sel.innerHTML = `<option value="">All templates added</option>`;
-      sel.disabled = true;
-      document.getElementById("template-add").disabled = true;
-      return;
-    }
-    sel.disabled = false;
-    document.getElementById("template-add").disabled = false;
-    sel.innerHTML = available.map(t =>
-      `<option value="${t.id}">${t.name} (${t.currency})</option>`).join("");
-  }
-
-  document.getElementById("template-add").addEventListener("click", () => {
-    const id = document.getElementById("template-select").value;
-    const tpl = CARD_TEMPLATES.find(t => t.id === id);
-    if (!tpl) return;
-    state.cards.push(JSON.parse(JSON.stringify(tpl)));
-    saveState();
-    renderAll();
-  });
 
   document.getElementById("add-rule-row").addEventListener("click", () => addRuleRow());
 
