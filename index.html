@@ -234,7 +234,15 @@
         </div>
         <label>Category multipliers</label>
         <div id="new-card-rules"></div>
-        <button class="secondary" id="add-rule-row" type="button">+ Category rule</button>
+        <div style="display:flex; gap:8px; margin-top:6px;">
+          <button class="secondary" id="add-rule-row" type="button">+ Category rule</button>
+          <button class="secondary" id="toggle-group-add" type="button">+ Whole group</button>
+        </div>
+        <div id="group-add-row" style="display:none; margin-top:8px; gap:6px; align-items:end; grid-template-columns:2fr 1fr auto;">
+          <div><label style="font-size:11px;">Group</label><select id="group-select"></select></div>
+          <div><label style="font-size:11px;">x per $1</label><input id="group-mult" type="number" step="0.5" min="0" placeholder="e.g., 3" /></div>
+          <button class="secondary" id="apply-group" type="button">Add all</button>
+        </div>
         <div class="actions">
           <button id="save-new-card">Save Card</button>
           <button class="secondary" id="cancel-edit" type="button" style="display:none;">Cancel</button>
@@ -686,6 +694,8 @@
     document.getElementById("new-card-base").value = "1";
     document.getElementById("new-card-currency").value = "";
     document.getElementById("new-card-rules").innerHTML = "";
+    document.getElementById("group-add-row").style.display = "none";
+    document.getElementById("group-mult").value = "";
     document.getElementById("save-new-card").textContent = "Save Card";
     document.getElementById("cancel-edit").style.display = "none";
     document.querySelector("details summary").textContent = "+ Add custom card";
@@ -856,6 +866,31 @@
   });
 
   document.getElementById("add-rule-row").addEventListener("click", () => addRuleRow());
+
+  (function initGroupAdd() {
+    const sel = document.getElementById("group-select");
+    sel.innerHTML = CATEGORY_GROUPS.map(g => `<option value="${g.label}">${g.label}</option>`).join("");
+    document.getElementById("toggle-group-add").addEventListener("click", () => {
+      const row = document.getElementById("group-add-row");
+      row.style.display = row.style.display === "none" ? "grid" : "none";
+    });
+    document.getElementById("apply-group").addEventListener("click", () => {
+      const groupLabel = sel.value;
+      const mult = parseFloat(document.getElementById("group-mult").value);
+      if (!isFinite(mult) || mult <= 0) { alert("Enter a multiplier."); return; }
+      const group = CATEGORY_GROUPS.find(g => g.label === groupLabel);
+      if (!group) return;
+      const existing = new Set(
+        Array.from(document.querySelectorAll("#new-card-rules .rule-editor-row select"))
+          .map(s => s.value)
+      );
+      for (const cat of group.items) {
+        if (existing.has(cat)) continue;
+        addRuleRow(cat, mult);
+      }
+      document.getElementById("group-mult").value = "";
+    });
+  })();
 
   document.getElementById("save-new-card").addEventListener("click", () => {
     const name = document.getElementById("new-card-name").value.trim();
