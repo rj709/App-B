@@ -286,8 +286,12 @@
     </table>
     </div>
 
-    <h2 style="margin-top:24px;">Transactions</h2>
-    <table id="txn-table">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:24px;">
+      <h2 style="margin:0;">Transactions</h2>
+      <button class="secondary" id="toggle-txns" type="button" style="padding:4px 10px; font-size:12px;">Hide</button>
+    </div>
+    <div id="txns-section">
+    <table id="txn-table" style="margin-top:12px;">
       <thead>
         <tr>
           <th>Date</th>
@@ -302,6 +306,7 @@
       <tbody id="txn-rows"></tbody>
     </table>
     <div class="empty" id="txn-empty">No transactions yet. Add one on the left.</div>
+    </div>
   </section>
 </main>
 
@@ -774,6 +779,18 @@
     applySummaryVisibility();
   });
   applySummaryVisibility();
+
+  function applyTxnsVisibility() {
+    const hidden = !!state.txnsHidden;
+    document.getElementById("txns-section").style.display = hidden ? "none" : "";
+    document.getElementById("toggle-txns").textContent = hidden ? "Show" : "Hide";
+  }
+  document.getElementById("toggle-txns").addEventListener("click", () => {
+    state.txnsHidden = !state.txnsHidden;
+    saveState();
+    applyTxnsVisibility();
+  });
+  applyTxnsVisibility();
 
   function renderTransactions() {
     const tbody = document.getElementById("txn-rows");
