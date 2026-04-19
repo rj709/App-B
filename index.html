@@ -27,14 +27,46 @@
     color: var(--text);
     line-height: 1.4;
   }
-  .brand {
-    padding: 22px 32px 8px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 2.5px;
-    color: var(--muted);
-    text-transform: uppercase;
+  .page-header {
+    padding: 36px 32px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: wrap;
   }
+  .page-header h1 {
+    margin: 0;
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: -1px;
+  }
+  .page-header .subtitle {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .page-header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 14px;
+  }
+  .last-updated { text-align: right; }
+  .last-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .last-value {
+    margin-top: 4px;
+    font-size: 17px;
+    font-weight: 500;
+  }
+  .header-buttons { display: flex; gap: 10px; }
+  .header-buttons button { padding: 10px 22px; font-size: 13px; font-weight: 600; }
   .hero-panel {
     margin: 0 28px;
     background: var(--panel);
@@ -241,7 +273,23 @@
 </head>
 <body>
 <header>
-  <div class="brand">Points Tracker</div>
+  <div class="page-header">
+    <div>
+      <h1>Loyalty Points Tracker</h1>
+      <p class="subtitle">Track airline, hotel, rail, and credit card points in one place.</p>
+    </div>
+    <div class="page-header-right">
+      <div class="last-updated">
+        <div class="last-label">Last Updated</div>
+        <div class="last-value" id="last-updated">—</div>
+      </div>
+      <div class="header-buttons">
+        <button class="secondary" id="export-btn" type="button">Export</button>
+        <button class="secondary" id="import-btn" type="button">Import</button>
+        <input type="file" id="import-file" accept="application/json,.json" style="display:none;" />
+      </div>
+    </div>
+  </div>
   <div class="hero-panel">
     <div class="hero-stat">
       <div class="hero-label">Total Spend</div>
@@ -260,11 +308,6 @@
       <div class="hero-value" id="top-currency-value">—</div>
       <div class="hero-sub" id="top-currency-name"></div>
     </div>
-  </div>
-  <div class="toolbar">
-    <button class="secondary" id="export-btn" type="button">Export</button>
-    <button class="secondary" id="import-btn" type="button">Import</button>
-    <input type="file" id="import-file" accept="application/json,.json" style="display:none;" />
   </div>
 </header>
 
@@ -757,7 +800,18 @@
     return { cards, transactions: [] };
   }
   function saveState() {
+    state.lastUpdated = Date.now();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    renderLastUpdated();
+  }
+  function renderLastUpdated() {
+    const el = document.getElementById("last-updated");
+    if (!el) return;
+    if (!state.lastUpdated) { el.textContent = "—"; return; }
+    const d = new Date(state.lastUpdated);
+    const date = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    el.textContent = `${date} at ${time}`;
   }
 
   function multiplierFor(card, category) {
@@ -1274,6 +1328,7 @@
   });
 
   document.getElementById("txn-date").valueAsDate = new Date();
+  renderLastUpdated();
   renderAll();
 </script>
 </body>
