@@ -703,7 +703,7 @@
     const sel = document.getElementById("txn-card");
     const prev = sel.value;
     sel.innerHTML =
-      `<option value="">— Select card —</option>` +
+      `<option value="">— Select —</option>` +
       sortedCards().map(c => `<option value="${c.id}">${c.name}</option>`).join("");
     sel.value = prev || "";
   }
@@ -717,7 +717,7 @@
   function renderCategorySelect() {
     const sel = document.getElementById("txn-category");
     const prev = sel.value;
-    sel.innerHTML = `<option value="">— Select category —</option>` + categoryOptionsHTML();
+    sel.innerHTML = `<option value="">— Select —</option>` + categoryOptionsHTML();
     sel.value = prev || "";
   }
 
