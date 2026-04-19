@@ -223,6 +223,8 @@
               <option value="Southwest Rapid Rewards"></option>
               <option value="Alaska Mileage Plan"></option>
               <option value="JetBlue TrueBlue"></option>
+              <option value="Amtrak Guest Rewards"></option>
+              <option value="Rakuten Cash Back"></option>
             </datalist>
           </div>
         </div>
@@ -427,10 +429,151 @@
         "Gas Stations": 3,
         "Supermarket": 3
       }
+    },
+    {
+      id: "apple",
+      name: "Apple Card",
+      currency: "Cash Back",
+      base: 2,
+      rules: {}
+    },
+    {
+      id: "delta-reserve",
+      name: "Amex Delta Reserve",
+      currency: "Delta SkyMiles",
+      base: 1,
+      rules: { "Airlines": 3 }
+    },
+    {
+      id: "amex-bbp",
+      name: "Amex Business Blue Plus",
+      currency: "Amex MR",
+      base: 2,
+      rules: {}
+    },
+    {
+      id: "delta-biz-reserve",
+      name: "Amex Delta Business Reserve",
+      currency: "Delta SkyMiles",
+      base: 1,
+      rules: { "Airlines": 3 }
+    },
+    {
+      id: "hilton-biz",
+      name: "Amex Hilton Honors Business",
+      currency: "Hilton Honors",
+      base: 3,
+      rules: {
+        "Hotels": 12,
+        "Restaurants": 6, "Fast Food": 6, "Coffee Shops": 6, "Bars": 6, "Food Delivery": 6,
+        "Gas Stations": 6,
+        "Airlines": 6,
+        "Car Rentals": 6,
+        "Cell Phone": 6,
+        "Shipping": 6
+      }
+    },
+    {
+      id: "ihg-premier",
+      name: "Chase IHG One Rewards Premier",
+      currency: "IHG One Rewards",
+      base: 3,
+      rules: {
+        "Hotels": 10,
+        "Airlines": 5, "Vacation Rentals": 5, "Car Rentals": 5, "Cruises": 5, "Other Travel": 5,
+        "Travel Portal (Flights)": 5, "Travel Portal (Hotels)": 5, "Travel Portal (Cars)": 5,
+        "Restaurants": 5, "Fast Food": 5, "Coffee Shops": 5, "Bars": 5, "Food Delivery": 5,
+        "Gas Stations": 5
+      }
+    },
+    {
+      id: "usb-shopper",
+      name: "U.S. Bank Shopper Cash Rewards",
+      currency: "Cash Back",
+      base: 1.5,
+      rules: {
+        "Department Stores": 6,
+        "Gas Stations": 3,
+        "Travel Portal (Flights)": 5.5, "Travel Portal (Hotels)": 5.5, "Travel Portal (Cars)": 5.5
+      }
+    },
+    {
+      id: "usb-cash-plus",
+      name: "U.S. Bank Cash+",
+      currency: "Cash Back",
+      base: 1,
+      rules: {
+        "Utilities": 5, "Internet": 5, "Cable / TV": 5, "Cell Phone": 5, "Streaming": 5,
+        "Supermarket": 2
+      }
+    },
+    {
+      id: "amex-green",
+      name: "Amex Green",
+      currency: "Amex MR",
+      base: 1,
+      rules: {
+        "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Bars": 3, "Food Delivery": 3,
+        "Airlines": 3, "Hotels": 3, "Vacation Rentals": 3, "Car Rentals": 3, "Cruises": 3,
+        "Rideshare": 3, "Taxis": 3, "Transit": 3, "Tolls & Parking": 3, "Other Travel": 3,
+        "Travel Portal (Flights)": 3, "Travel Portal (Hotels)": 3, "Travel Portal (Cars)": 3
+      }
+    },
+    {
+      id: "imprint-rakuten",
+      name: "Rakuten Credit Card (Imprint)",
+      currency: "Rakuten Cash Back",
+      base: 1,
+      rules: {
+        "Online Shopping": 10,
+        "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Bars": 3, "Food Delivery": 3,
+        "Supermarket": 3,
+        "Gas Stations": 3
+      }
+    },
+    {
+      id: "bilt-palladium",
+      name: "Bilt Palladium",
+      currency: "Bilt",
+      base: 1,
+      rules: {
+        "Restaurants": 4, "Fast Food": 4, "Coffee Shops": 4, "Bars": 4, "Food Delivery": 4,
+        "Airlines": 3, "Hotels": 3, "Vacation Rentals": 3, "Car Rentals": 3, "Cruises": 3,
+        "Rideshare": 3, "Transit": 3, "Other Travel": 3,
+        "Rent / Mortgage": 1
+      }
+    },
+    {
+      id: "td-cash",
+      name: "TD Bank Cash",
+      currency: "Cash Back",
+      base: 1,
+      rules: {
+        "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Bars": 3, "Food Delivery": 3,
+        "Supermarket": 2
+      }
+    },
+    {
+      id: "amtrak-preferred",
+      name: "FNBO Amtrak Preferred",
+      currency: "Amtrak Guest Rewards",
+      base: 1,
+      rules: {
+        "Other Travel": 3,
+        "Airlines": 2, "Hotels": 2, "Vacation Rentals": 2, "Car Rentals": 2, "Cruises": 2,
+        "Travel Portal (Flights)": 2, "Travel Portal (Hotels)": 2, "Travel Portal (Cars)": 2
+      }
     }
   ];
 
-  const STORAGE_KEY = "points-tracker-v5";
+  const INITIAL_CARD_IDS = [
+    "apple", "freedom-unlimited", "delta-reserve", "amex-plat", "amex-bbp",
+    "delta-biz-reserve", "hilton-biz", "ihg-premier", "usb-shopper",
+    "usb-cash-plus", "amex-green", "imprint-rakuten", "bilt-palladium",
+    "amex-gold", "td-cash", "amtrak-preferred"
+  ];
+
+  const STORAGE_KEY = "points-tracker-v6";
   let state = loadState();
 
   function loadState() {
@@ -438,7 +581,11 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) return JSON.parse(raw);
     } catch (e) {}
-    return { cards: [], transactions: [] };
+    const cards = INITIAL_CARD_IDS
+      .map(id => CARD_TEMPLATES.find(t => t.id === id))
+      .filter(Boolean)
+      .map(t => JSON.parse(JSON.stringify(t)));
+    return { cards, transactions: [] };
   }
   function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
