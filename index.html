@@ -206,6 +206,11 @@
     <div class="stat"><span class="label">Total Spend</span><span class="value" id="total-spend">$0.00</span></div>
     <div class="stat"><span class="label">Cards</span><span class="value" id="total-cards">0</span></div>
     <div class="stat"><span class="label">Transactions</span><span class="value" id="total-txns">0</span></div>
+    <div style="display:flex; gap:8px; align-self:center; margin-left:8px;">
+      <button class="secondary" id="export-btn" type="button" style="padding:8px 14px; font-size:12px;">Export</button>
+      <button class="secondary" id="import-btn" type="button" style="padding:8px 14px; font-size:12px;">Import</button>
+      <input type="file" id="import-file" accept="application/json,.json" style="display:none;" />
+    </div>
   </div>
 </header>
 
@@ -718,7 +723,9 @@
   }
 
   function fmtMoney(n) {
-    return "$" + (Math.round(n * 100) / 100).toFixed(2);
+    return "$" + (Math.round(n * 100) / 100).toLocaleString(undefined, {
+      minimumFractionDigits: 2, maximumFractionDigits: 2
+    });
   }
   function fmtNum(n) { return n.toLocaleString(); }
 
@@ -1147,6 +1154,49 @@
   ["txn-card", "txn-category", "txn-amount"].forEach(id => {
     document.getElementById(id).addEventListener("input", renderPreview);
     document.getElementById(id).addEventListener("change", renderPreview);
+  });
+
+  document.getElementById("export-btn").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `points-tracker-${ts}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("import-btn").addEventListener("click", () => {
+    document.getElementById("import-file").click();
+  });
+  document.getElementById("import-file").addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        if (!parsed || !Array.isArray(parsed.cards) || !Array.isArray(parsed.transactions)) {
+          alert("Invalid file: expected an object with 'cards' and 'transactions' arrays.");
+          return;
+        }
+        if (!confirm(`Replace your current data with ${parsed.cards.length} cards and ${parsed.transactions.length} transactions?`)) return;
+        for (const c of parsed.cards) {
+          if (!c.type) c.type = /cash back/i.test(c.currency || "") ? "cashback" : "points";
+        }
+        state = parsed;
+        saveState();
+        renderAll();
+      } catch (err) {
+        alert("Could not parse file: " + err.message);
+      } finally {
+        e.target.value = "";
+      }
+    };
+    reader.readAsText(file);
   });
 
   document.getElementById("txn-date").valueAsDate = new Date();
