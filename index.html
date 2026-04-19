@@ -182,8 +182,12 @@
       <button id="txn-add">Add Transaction</button>
     </div>
 
-    <h2 style="margin-top:24px;">Your Cards</h2>
-    <div class="card-list" id="card-list"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:24px;">
+      <h2 style="margin:0;">Your Cards</h2>
+      <button class="secondary" id="toggle-cards" type="button" style="padding:4px 10px; font-size:12px;">Hide</button>
+    </div>
+    <div id="cards-section">
+    <div class="card-list" id="card-list" style="margin-top:12px;"></div>
     <div class="field" style="margin-top:12px;">
       <label for="template-select">Quick add</label>
       <div style="display:flex; gap:8px;">
@@ -237,6 +241,7 @@
         </div>
       </div>
     </details>
+    </div>
   </section>
 
   <section class="panel">
@@ -686,6 +691,18 @@
     document.querySelector("details summary").textContent = "+ Add custom card";
   }
   document.getElementById("cancel-edit").addEventListener("click", cancelEdit);
+
+  function applyCardsVisibility() {
+    const hidden = !!state.cardsHidden;
+    document.getElementById("cards-section").style.display = hidden ? "none" : "";
+    document.getElementById("toggle-cards").textContent = hidden ? "Show" : "Hide";
+  }
+  document.getElementById("toggle-cards").addEventListener("click", () => {
+    state.cardsHidden = !state.cardsHidden;
+    saveState();
+    applyCardsVisibility();
+  });
+  applyCardsVisibility();
 
   function renderTransactions() {
     const tbody = document.getElementById("txn-rows");
