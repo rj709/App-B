@@ -716,7 +716,9 @@
   }
   function renderCategorySelect() {
     const sel = document.getElementById("txn-category");
-    sel.innerHTML = categoryOptionsHTML();
+    const prev = sel.value;
+    sel.innerHTML = `<option value="">— Select category —</option>` + categoryOptionsHTML();
+    sel.value = prev || "";
   }
 
   function cardColor(card) {
@@ -1067,6 +1069,7 @@
     const note = document.getElementById("txn-note").value.trim();
     const card = state.cards.find(c => c.id === cardId);
     if (!card) { alert("Pick a card."); return; }
+    if (!category) { alert("Pick a category."); return; }
     if (!isFinite(amount) || amount <= 0) { alert("Enter a valid amount."); return; }
     const points = earnedFor(card, category, amount);
     const txn = {
@@ -1079,6 +1082,7 @@
     document.getElementById("txn-amount").value = "";
     document.getElementById("txn-note").value = "";
     document.getElementById("txn-card").value = "";
+    document.getElementById("txn-category").value = "";
     document.getElementById("txn-date").valueAsDate = new Date();
     renderAll();
   });
