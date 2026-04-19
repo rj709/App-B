@@ -240,19 +240,37 @@
 </main>
 
 <script>
-  const CATEGORIES = [
-    "Dining",
-    "Groceries",
-    "Gas",
-    "Travel (Flights)",
-    "Travel (Hotels)",
-    "Travel (Other)",
-    "Streaming",
-    "Online Shopping",
-    "Transit",
-    "Drugstores",
-    "Other"
+  const CATEGORY_GROUPS = [
+    { label: "Food & Drink", items: [
+      "Restaurants", "Fast Food", "Coffee Shops", "Bars", "Food Delivery"
+    ]},
+    { label: "Groceries", items: [
+      "Supermarket", "Online Groceries", "Warehouse Clubs"
+    ]},
+    { label: "Travel", items: [
+      "Airlines", "Hotels", "Vacation Rentals", "Car Rentals", "Cruises",
+      "Travel Portal (Flights)", "Travel Portal (Hotels/Cars)", "Other Travel"
+    ]},
+    { label: "Transportation", items: [
+      "Gas Stations", "EV Charging", "Rideshare", "Taxis", "Transit", "Tolls & Parking"
+    ]},
+    { label: "Shopping", items: [
+      "Amazon", "Online Shopping", "Department Stores", "Home Improvement",
+      "Office Supplies", "Clothing", "Electronics"
+    ]},
+    { label: "Bills & Services", items: [
+      "Utilities", "Internet", "Cell Phone", "Cable / TV", "Streaming",
+      "Insurance", "Rent / Mortgage", "Subscriptions"
+    ]},
+    { label: "Health & Personal", items: [
+      "Drugstores", "Healthcare", "Fitness / Gyms", "Pets"
+    ]},
+    { label: "Other", items: [
+      "Entertainment", "Education", "Shipping", "Charity", "Taxes",
+      "Foreign Transactions", "Other"
+    ]}
   ];
+  const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
 
   const DEFAULT_CARDS = [
     {
@@ -260,9 +278,9 @@
       name: "Amex Gold",
       base: 1,
       rules: {
-        "Dining": 4,
-        "Groceries": 4,
-        "Travel (Flights)": 3
+        "Restaurants": 4, "Fast Food": 4, "Coffee Shops": 4, "Food Delivery": 4,
+        "Supermarket": 4,
+        "Airlines": 3, "Travel Portal (Flights)": 3
       }
     },
     {
@@ -270,8 +288,9 @@
       name: "Amex Platinum",
       base: 1,
       rules: {
-        "Travel (Flights)": 5,
-        "Travel (Hotels)": 5
+        "Airlines": 5,
+        "Travel Portal (Flights)": 5,
+        "Travel Portal (Hotels/Cars)": 5
       }
     },
     {
@@ -279,12 +298,12 @@
       name: "Chase Sapphire Preferred",
       base: 1,
       rules: {
-        "Dining": 3,
+        "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Bars": 3, "Food Delivery": 3,
+        "Online Groceries": 3,
         "Streaming": 3,
-        "Online Shopping": 3,
-        "Travel (Flights)": 2,
-        "Travel (Hotels)": 2,
-        "Travel (Other)": 2
+        "Travel Portal (Flights)": 5, "Travel Portal (Hotels/Cars)": 5,
+        "Airlines": 2, "Hotels": 2, "Vacation Rentals": 2, "Car Rentals": 2, "Cruises": 2,
+        "Rideshare": 2, "Taxis": 2, "Transit": 2, "Tolls & Parking": 2, "Other Travel": 2
       }
     },
     {
@@ -292,8 +311,8 @@
       name: "Capital One Venture X",
       base: 2,
       rules: {
-        "Travel (Flights)": 5,
-        "Travel (Hotels)": 10
+        "Travel Portal (Flights)": 5,
+        "Travel Portal (Hotels/Cars)": 10
       }
     },
     {
@@ -301,10 +320,42 @@
       name: "Citi Double Cash",
       base: 2,
       rules: {}
+    },
+    {
+      id: "bilt",
+      name: "Bilt Rewards",
+      base: 1,
+      rules: {
+        "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Bars": 3, "Food Delivery": 3,
+        "Airlines": 2, "Hotels": 2, "Vacation Rentals": 2, "Car Rentals": 2, "Cruises": 2,
+        "Rideshare": 2, "Transit": 2, "Other Travel": 2,
+        "Rent / Mortgage": 1
+      }
+    },
+    {
+      id: "bcp",
+      name: "Amex Blue Cash Preferred",
+      base: 1,
+      rules: {
+        "Supermarket": 6,
+        "Streaming": 6,
+        "Gas Stations": 3,
+        "Transit": 3, "Rideshare": 3, "Taxis": 3
+      }
+    },
+    {
+      id: "freedom-unlimited",
+      name: "Chase Freedom Unlimited",
+      base: 1.5,
+      rules: {
+        "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Bars": 3, "Food Delivery": 3,
+        "Drugstores": 3,
+        "Travel Portal (Flights)": 5, "Travel Portal (Hotels/Cars)": 5
+      }
     }
   ];
 
-  const STORAGE_KEY = "points-tracker-v1";
+  const STORAGE_KEY = "points-tracker-v2";
   let state = loadState();
 
   function loadState() {
@@ -333,10 +384,16 @@
     sel.innerHTML = state.cards.map(c =>
       `<option value="${c.id}">${c.name}</option>`).join("");
   }
+  function categoryOptionsHTML(selected = "") {
+    return CATEGORY_GROUPS.map(g =>
+      `<optgroup label="${g.label}">${g.items.map(c =>
+        `<option value="${c}" ${c === selected ? "selected" : ""}>${c}</option>`
+      ).join("")}</optgroup>`
+    ).join("");
+  }
   function renderCategorySelect() {
     const sel = document.getElementById("txn-category");
-    sel.innerHTML = CATEGORIES.map(c =>
-      `<option value="${c}">${c}</option>`).join("");
+    sel.innerHTML = categoryOptionsHTML();
   }
 
   function renderCards() {
@@ -467,10 +524,8 @@
     const container = document.getElementById("new-card-rules");
     const div = document.createElement("div");
     div.className = "rule-editor-row";
-    const catOptions = CATEGORIES.map(c =>
-      `<option value="${c}" ${c === cat ? "selected" : ""}>${c}</option>`).join("");
     div.innerHTML = `
-      <select>${catOptions}</select>
+      <select>${categoryOptionsHTML(cat)}</select>
       <input type="number" step="0.5" min="0" placeholder="x" value="${mult}" />
       <button class="danger" type="button">x</button>
     `;
