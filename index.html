@@ -197,9 +197,18 @@
         </div>
         <div class="row">
           <div class="field">
-            <label for="new-card-base">Base multiplier (x per $1)</label>
+            <label for="new-card-type">Reward type</label>
+            <select id="new-card-type">
+              <option value="points">Points / miles (x)</option>
+              <option value="cashback">Cash back (%)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="new-card-base"><span id="new-card-base-label">Base multiplier (x per $1)</span></label>
             <input type="number" id="new-card-base" step="0.5" min="0" value="1" />
           </div>
+        </div>
+        <div class="row">
           <div class="field">
             <label for="new-card-currency">Points currency</label>
             <input type="text" id="new-card-currency" list="currency-list" placeholder="e.g., Amex MR" />
@@ -394,6 +403,7 @@
       id: "bcp",
       name: "Amex Blue Cash Preferred",
       currency: "Cash Back",
+      type: "cashback",
       base: 1,
       rules: {
         "Supermarket": 6,
@@ -441,6 +451,7 @@
       id: "apple",
       name: "Apple Card",
       currency: "Cash Back",
+      type: "cashback",
       base: 1,
       rules: { "Apple Pay": 2 }
     },
@@ -497,6 +508,7 @@
       id: "usb-shopper",
       name: "U.S. Bank Shopper Cash Rewards",
       currency: "Cash Back",
+      type: "cashback",
       base: 1.5,
       rules: {
         "Department Stores": 6,
@@ -508,6 +520,7 @@
       id: "usb-cash-plus",
       name: "U.S. Bank Cash+",
       currency: "Cash Back",
+      type: "cashback",
       base: 1,
       rules: {
         "Utilities": 5, "Internet": 5, "Cable / TV": 5, "Cell Phone": 5, "Streaming": 5,
@@ -530,6 +543,7 @@
       id: "imprint-rakuten",
       name: "Rakuten Credit Card (Imprint)",
       currency: "Rakuten Cash Back",
+      type: "cashback",
       base: 1,
       rules: {
         "Online Shopping": 10,
@@ -554,6 +568,7 @@
       id: "td-cash",
       name: "TD Bank Cash",
       currency: "Cash Back",
+      type: "cashback",
       base: 1,
       rules: {
         "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Bars": 3, "Food Delivery": 3,
@@ -586,7 +601,15 @@
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        for (const c of parsed.cards || []) {
+          if (!c.type) {
+            c.type = /cash back/i.test(c.currency || "") ? "cashback" : "points";
+          }
+        }
+        return parsed;
+      }
     } catch (e) {}
     const cards = INITIAL_CARD_IDS
       .map(id => CARD_TEMPLATES.find(t => t.id === id))
@@ -598,9 +621,20 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 
-  function pointsFor(card, category, amount) {
-    const mult = (card.rules && card.rules[category]) || card.base || 1;
-    return Math.round(mult * amount);
+  function multiplierFor(card, category) {
+    return (card.rules && card.rules[category]) || card.base || 1;
+  }
+  function isCashback(card) { return card && card.type === "cashback"; }
+  function earnedFor(card, category, amount) {
+    const mult = multiplierFor(card, category);
+    const raw = mult * amount;
+    return isCashback(card) ? Math.round(raw) / 100 : Math.round(raw);
+  }
+  function fmtEarned(card, value) {
+    return isCashback(card) ? fmtMoney(value) : fmtNum(value);
+  }
+  function multiplierLabel(card, mult) {
+    return isCashback(card) ? `${mult}%` : `${mult}x`;
   }
 
   function fmtMoney(n) {
@@ -670,6 +704,8 @@
     document.getElementById("new-card-name").value = card.name;
     document.getElementById("new-card-base").value = card.base;
     document.getElementById("new-card-currency").value = card.currency || "";
+    document.getElementById("new-card-type").value = isCashback(card) ? "cashback" : "points";
+    applyTypeLabel();
     document.getElementById("new-card-rules").innerHTML = "";
     for (const [cat, mult] of Object.entries(card.rules || {})) {
       addRuleRow(cat, mult);
@@ -686,6 +722,8 @@
     document.getElementById("new-card-name").value = "";
     document.getElementById("new-card-base").value = "1";
     document.getElementById("new-card-currency").value = "";
+    document.getElementById("new-card-type").value = "points";
+    applyTypeLabel();
     document.getElementById("new-card-rules").innerHTML = "";
     document.getElementById("group-add-row").style.display = "none";
     document.getElementById("group-mult").value = "";
@@ -693,6 +731,12 @@
     document.getElementById("cancel-edit").style.display = "none";
     document.querySelector("details summary").textContent = "+ Add custom card";
   }
+  function applyTypeLabel() {
+    const isCb = document.getElementById("new-card-type").value === "cashback";
+    document.getElementById("new-card-base-label").textContent =
+      isCb ? "Base rate (% per $1)" : "Base multiplier (x per $1)";
+  }
+  document.getElementById("new-card-type").addEventListener("change", applyTypeLabel);
   document.getElementById("cancel-edit").addEventListener("click", cancelEdit);
 
   function applyCardsVisibility() {
@@ -721,6 +765,7 @@
     tbody.innerHTML = sorted.map(t => {
       const card = state.cards.find(c => c.id === t.cardId);
       const cardName = card ? card.name : "Unknown card";
+      const earned = card ? earnedFor(card, t.category, t.amount) : t.points;
       return `
         <tr>
           <td>${t.date}</td>
@@ -728,7 +773,7 @@
           <td>${t.category}</td>
           <td>${t.note || ""}</td>
           <td class="num">${fmtMoney(t.amount)}</td>
-          <td class="num pts">${fmtNum(t.points)}</td>
+          <td class="num pts">${fmtEarned(card, earned)}</td>
           <td><button class="danger" data-del-txn="${t.id}">x</button></td>
         </tr>
       `;
@@ -748,8 +793,10 @@
     const totals = {};
     for (const t of state.transactions) {
       if (!totals[t.cardId]) totals[t.cardId] = { spend: 0, points: 0 };
+      const card = state.cards.find(c => c.id === t.cardId);
+      const earned = card ? earnedFor(card, t.category, t.amount) : t.points;
       totals[t.cardId].spend += t.amount;
-      totals[t.cardId].points += t.points;
+      totals[t.cardId].points += earned;
     }
     let totalSpend = 0;
     const byCurrency = {};
@@ -757,15 +804,17 @@
       const t = totals[card.id] || { spend: 0, points: 0 };
       totalSpend += t.spend;
       const currency = card.currency || "Points";
-      byCurrency[currency] = (byCurrency[currency] || 0) + t.points;
+      if (!byCurrency[currency]) byCurrency[currency] = { total: 0, cashback: isCashback(card) };
+      byCurrency[currency].total += t.points;
       const avg = t.spend > 0 ? (t.points / t.spend) : 0;
+      const avgLabel = isCashback(card) ? `${(avg * 100).toFixed(2)}%` : `${avg.toFixed(2)}x`;
       return `
         <tr>
           <td>${card.name}</td>
           <td><span class="tag">${currency}</span></td>
           <td class="num">${fmtMoney(t.spend)}</td>
-          <td class="num pts">${fmtNum(t.points)}</td>
-          <td class="num">${avg.toFixed(2)}x</td>
+          <td class="num pts">${fmtEarned(card, t.points)}</td>
+          <td class="num">${avgLabel}</td>
         </tr>
       `;
     }).join("");
@@ -779,8 +828,8 @@
     document.getElementById("total-spend").textContent = fmtMoney(totalSpend);
 
     const currEntries = Object.entries(byCurrency)
-      .filter(([, p]) => p > 0)
-      .sort((a, b) => b[1] - a[1]);
+      .filter(([, v]) => v.total > 0)
+      .sort((a, b) => b[1].total - a[1].total);
     const currTbody = document.getElementById("currency-rows");
     const currEmpty = document.getElementById("currency-empty");
     if (currEntries.length === 0) {
@@ -788,8 +837,8 @@
       currEmpty.style.display = "block";
     } else {
       currEmpty.style.display = "none";
-      currTbody.innerHTML = currEntries.map(([c, p]) =>
-        `<tr><td>${c}</td><td class="num pts">${fmtNum(p)}</td></tr>`
+      currTbody.innerHTML = currEntries.map(([c, v]) =>
+        `<tr><td>${c}</td><td class="num pts">${v.cashback ? fmtMoney(v.total) : fmtNum(v.total)}</td></tr>`
       ).join("");
     }
   }
@@ -804,10 +853,10 @@
       preview.innerHTML = "Enter an amount to preview points.";
       return;
     }
-    const mult = (card.rules && card.rules[category]) || card.base;
-    const pts = pointsFor(card, category, amount);
+    const mult = multiplierFor(card, category);
+    const earned = earnedFor(card, category, amount);
     const currency = card.currency || "pts";
-    preview.innerHTML = `${fmtMoney(amount)} on <strong>${card.name}</strong> at <strong>${mult}x</strong> = <span class="pts">${fmtNum(pts)} ${currency}</span>`;
+    preview.innerHTML = `${fmtMoney(amount)} on <strong>${card.name}</strong> at <strong>${multiplierLabel(card, mult)}</strong> = <span class="pts">${fmtEarned(card, earned)} ${currency}</span>`;
   }
 
   function renderAll() {
@@ -863,6 +912,7 @@
     const name = document.getElementById("new-card-name").value.trim();
     const base = parseFloat(document.getElementById("new-card-base").value) || 1;
     const currency = document.getElementById("new-card-currency").value.trim() || "Points";
+    const type = document.getElementById("new-card-type").value === "cashback" ? "cashback" : "points";
     if (!name) { alert("Give the card a name."); return; }
     const rules = {};
     document.querySelectorAll("#new-card-rules .rule-editor-row").forEach(row => {
@@ -872,10 +922,10 @@
     });
     if (editingCardId) {
       const idx = state.cards.findIndex(c => c.id === editingCardId);
-      if (idx !== -1) state.cards[idx] = { id: editingCardId, name, currency, base, rules };
+      if (idx !== -1) state.cards[idx] = { id: editingCardId, name, currency, type, base, rules };
     } else {
       const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now().toString(36);
-      state.cards.push({ id, name, currency, base, rules });
+      state.cards.push({ id, name, currency, type, base, rules });
     }
     cancelEdit();
     saveState();
@@ -891,7 +941,7 @@
     const card = state.cards.find(c => c.id === cardId);
     if (!card) { alert("Pick a card."); return; }
     if (!isFinite(amount) || amount <= 0) { alert("Enter a valid amount."); return; }
-    const points = pointsFor(card, category, amount);
+    const points = earnedFor(card, category, amount);
     const txn = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       cardId, category, amount, date: date || new Date().toISOString().slice(0, 10),
