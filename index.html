@@ -145,9 +145,8 @@
 <body>
 <header>
   <h1>Points Tracker</h1>
-  <div class="totals">
+  <div class="totals" id="header-totals">
     <div class="stat"><span class="label">Spend</span><span class="value" id="total-spend">$0.00</span></div>
-    <div class="stat"><span class="label">Points</span><span class="value pts" id="total-points">0</span></div>
   </div>
 </header>
 
@@ -192,9 +191,33 @@
           <label for="new-card-name">Card name</label>
           <input type="text" id="new-card-name" placeholder="e.g., Chase Freedom Unlimited" />
         </div>
-        <div class="field">
-          <label for="new-card-base">Base multiplier (x per $1)</label>
-          <input type="number" id="new-card-base" step="0.5" min="0" value="1" />
+        <div class="row">
+          <div class="field">
+            <label for="new-card-base">Base multiplier (x per $1)</label>
+            <input type="number" id="new-card-base" step="0.5" min="0" value="1" />
+          </div>
+          <div class="field">
+            <label for="new-card-currency">Points currency</label>
+            <input type="text" id="new-card-currency" list="currency-list" placeholder="e.g., Amex MR" />
+            <datalist id="currency-list">
+              <option value="Amex MR"></option>
+              <option value="Chase UR"></option>
+              <option value="Capital One Miles"></option>
+              <option value="Citi TY"></option>
+              <option value="Bilt"></option>
+              <option value="Cash Back"></option>
+              <option value="Hilton Honors"></option>
+              <option value="Marriott Bonvoy"></option>
+              <option value="World of Hyatt"></option>
+              <option value="IHG One Rewards"></option>
+              <option value="Delta SkyMiles"></option>
+              <option value="United MileagePlus"></option>
+              <option value="American AAdvantage"></option>
+              <option value="Southwest Rapid Rewards"></option>
+              <option value="Alaska Mileage Plan"></option>
+              <option value="JetBlue TrueBlue"></option>
+            </datalist>
+          </div>
         </div>
         <label>Category multipliers</label>
         <div id="new-card-rules"></div>
@@ -207,7 +230,19 @@
   </section>
 
   <section class="panel">
-    <h2>Transactions</h2>
+    <h2>Points by Currency</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Currency</th>
+          <th class="num">Points</th>
+        </tr>
+      </thead>
+      <tbody id="currency-rows"></tbody>
+    </table>
+    <div class="empty" id="currency-empty">Log a transaction to see totals.</div>
+
+    <h2 style="margin-top:24px;">Transactions</h2>
     <table id="txn-table">
       <thead>
         <tr>
@@ -229,6 +264,7 @@
       <thead>
         <tr>
           <th>Card</th>
+          <th>Currency</th>
           <th class="num">Spend</th>
           <th class="num">Points</th>
           <th class="num">Avg x</th>
@@ -276,6 +312,7 @@
     {
       id: "amex-gold",
       name: "Amex Gold",
+      currency: "Amex MR",
       base: 1,
       rules: {
         "Restaurants": 4, "Fast Food": 4, "Coffee Shops": 4, "Food Delivery": 4,
@@ -286,6 +323,7 @@
     {
       id: "amex-plat",
       name: "Amex Platinum",
+      currency: "Amex MR",
       base: 1,
       rules: {
         "Airlines": 5,
@@ -296,6 +334,7 @@
     {
       id: "csp",
       name: "Chase Sapphire Preferred",
+      currency: "Chase UR",
       base: 1,
       rules: {
         "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Bars": 3, "Food Delivery": 3,
@@ -309,6 +348,7 @@
     {
       id: "venture-x",
       name: "Capital One Venture X",
+      currency: "Capital One Miles",
       base: 2,
       rules: {
         "Travel Portal (Flights)": 5,
@@ -318,12 +358,14 @@
     {
       id: "citi-dc",
       name: "Citi Double Cash",
+      currency: "Citi TY",
       base: 2,
       rules: {}
     },
     {
       id: "bilt",
       name: "Bilt Rewards",
+      currency: "Bilt",
       base: 1,
       rules: {
         "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Bars": 3, "Food Delivery": 3,
@@ -335,6 +377,7 @@
     {
       id: "bcp",
       name: "Amex Blue Cash Preferred",
+      currency: "Cash Back",
       base: 1,
       rules: {
         "Supermarket": 6,
@@ -346,16 +389,41 @@
     {
       id: "freedom-unlimited",
       name: "Chase Freedom Unlimited",
+      currency: "Chase UR",
       base: 1.5,
       rules: {
         "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Bars": 3, "Food Delivery": 3,
         "Drugstores": 3,
         "Travel Portal (Flights)": 5, "Travel Portal (Hotels/Cars)": 5
       }
+    },
+    {
+      id: "hilton-surpass",
+      name: "Hilton Honors Amex Surpass",
+      currency: "Hilton Honors",
+      base: 3,
+      rules: {
+        "Hotels": 12,
+        "Restaurants": 6, "Fast Food": 6, "Coffee Shops": 6, "Bars": 6, "Food Delivery": 6,
+        "Supermarket": 6,
+        "Gas Stations": 6
+      }
+    },
+    {
+      id: "marriott-boundless",
+      name: "Marriott Bonvoy Boundless",
+      currency: "Marriott Bonvoy",
+      base: 2,
+      rules: {
+        "Hotels": 6,
+        "Restaurants": 3, "Fast Food": 3, "Coffee Shops": 3, "Food Delivery": 3,
+        "Gas Stations": 3,
+        "Supermarket": 3
+      }
     }
   ];
 
-  const STORAGE_KEY = "points-tracker-v2";
+  const STORAGE_KEY = "points-tracker-v3";
   let state = loadState();
 
   function loadState() {
@@ -403,10 +471,11 @@
         .sort((a, b) => b[1] - a[1])
         .map(([cat, m]) => `<span class="rule"><strong>${m}x</strong> ${cat}</span>`)
         .join("");
+      const currency = card.currency || "Points";
       return `
         <div class="card-item">
           <div class="card-item-header">
-            <span class="card-item-name">${card.name}</span>
+            <span class="card-item-name">${card.name} <span class="tag">${currency}</span></span>
             <button class="danger" data-del-card="${card.id}">Remove</button>
           </div>
           <div class="card-item-summary">Base: <strong>${card.base}x</strong> on everything else</div>
@@ -469,15 +538,18 @@
       totals[t.cardId].spend += t.amount;
       totals[t.cardId].points += t.points;
     }
-    let totalSpend = 0, totalPoints = 0;
+    let totalSpend = 0;
+    const byCurrency = {};
     const rows = state.cards.map(card => {
       const t = totals[card.id] || { spend: 0, points: 0 };
       totalSpend += t.spend;
-      totalPoints += t.points;
+      const currency = card.currency || "Points";
+      byCurrency[currency] = (byCurrency[currency] || 0) + t.points;
       const avg = t.spend > 0 ? (t.points / t.spend) : 0;
       return `
         <tr>
           <td>${card.name}</td>
+          <td><span class="tag">${currency}</span></td>
           <td class="num">${fmtMoney(t.spend)}</td>
           <td class="num pts">${fmtNum(t.points)}</td>
           <td class="num">${avg.toFixed(2)}x</td>
@@ -489,11 +561,24 @@
     for (const cardId in totals) {
       if (!state.cards.find(c => c.id === cardId)) {
         totalSpend += totals[cardId].spend;
-        totalPoints += totals[cardId].points;
       }
     }
     document.getElementById("total-spend").textContent = fmtMoney(totalSpend);
-    document.getElementById("total-points").textContent = fmtNum(totalPoints);
+
+    const currEntries = Object.entries(byCurrency)
+      .filter(([, p]) => p > 0)
+      .sort((a, b) => b[1] - a[1]);
+    const currTbody = document.getElementById("currency-rows");
+    const currEmpty = document.getElementById("currency-empty");
+    if (currEntries.length === 0) {
+      currTbody.innerHTML = "";
+      currEmpty.style.display = "block";
+    } else {
+      currEmpty.style.display = "none";
+      currTbody.innerHTML = currEntries.map(([c, p]) =>
+        `<tr><td>${c}</td><td class="num pts">${fmtNum(p)}</td></tr>`
+      ).join("");
+    }
   }
 
   function renderPreview() {
@@ -508,7 +593,8 @@
     }
     const mult = (card.rules && card.rules[category]) || card.base;
     const pts = pointsFor(card, category, amount);
-    preview.innerHTML = `${fmtMoney(amount)} on <strong>${card.name}</strong> at <strong>${mult}x</strong> = <span class="pts">${fmtNum(pts)} pts</span>`;
+    const currency = card.currency || "pts";
+    preview.innerHTML = `${fmtMoney(amount)} on <strong>${card.name}</strong> at <strong>${mult}x</strong> = <span class="pts">${fmtNum(pts)} ${currency}</span>`;
   }
 
   function renderAll() {
@@ -538,6 +624,7 @@
   document.getElementById("save-new-card").addEventListener("click", () => {
     const name = document.getElementById("new-card-name").value.trim();
     const base = parseFloat(document.getElementById("new-card-base").value) || 1;
+    const currency = document.getElementById("new-card-currency").value.trim() || "Points";
     if (!name) { alert("Give the card a name."); return; }
     const rules = {};
     document.querySelectorAll("#new-card-rules .rule-editor-row").forEach(row => {
@@ -546,10 +633,11 @@
       if (cat && isFinite(mult) && mult > 0) rules[cat] = mult;
     });
     const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now().toString(36);
-    state.cards.push({ id, name, base, rules });
+    state.cards.push({ id, name, currency, base, rules });
     saveState();
     document.getElementById("new-card-name").value = "";
     document.getElementById("new-card-base").value = "1";
+    document.getElementById("new-card-currency").value = "";
     document.getElementById("new-card-rules").innerHTML = "";
     renderAll();
   });
