@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Points Tracker</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1f232c;
+    --border: #2a2f3a;
+    --text: #e7ebf0;
+    --muted: #8a94a6;
+    --accent: #5eead4;
+    --accent-2: #7dd3fc;
+    --danger: #f87171;
+    --good: #34d399;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.4;
+  }
+  header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header h1 { margin: 0; font-size: 20px; letter-spacing: 0.3px; }
+  header .totals { display: flex; gap: 20px; flex-wrap: wrap; }
+  .stat { display: flex; flex-direction: column; align-items: flex-end; }
+  .stat .label { font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.8px; }
+  .stat .value { font-size: 18px; font-weight: 600; }
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px 24px;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .panel h2 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+  }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  input, select, textarea, button {
+    font: inherit;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { outline: 1px solid var(--accent-2); }
+  button {
+    cursor: pointer;
+    background: var(--accent);
+    color: #0b0d12;
+    border: none;
+    font-weight: 600;
+    width: auto;
+    padding: 9px 14px;
+  }
+  button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  button.danger { background: transparent; color: var(--danger); border: 1px solid var(--border); padding: 4px 8px; font-size: 12px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
+  .field { margin-bottom: 10px; }
+  .card-list { display: flex; flex-direction: column; gap: 10px; }
+  .card-item {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .card-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .card-item-name { font-weight: 600; }
+  .card-item-summary { font-size: 12px; color: var(--muted); }
+  .rules { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .rule {
+    font-size: 11px;
+    background: #0b0d12;
+    border: 1px solid var(--border);
+    padding: 3px 6px;
+    border-radius: 4px;
+    color: var(--muted);
+  }
+  .rule strong { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+  th { font-weight: 500; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pts { color: var(--accent); font-weight: 600; }
+  .empty { color: var(--muted); font-size: 13px; font-style: italic; padding: 12px 0; }
+  .preview {
+    margin-top: 6px;
+    padding: 8px 10px;
+    background: #0b0d12;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    min-height: 20px;
+  }
+  .preview .pts { font-size: 15px; }
+  details { margin-top: 10px; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+  .rule-editor { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .rule-editor-row { display: grid; grid-template-columns: 2fr 1fr auto; gap: 6px; align-items: end; }
+  .rule-editor-row input { padding: 6px 8px; font-size: 13px; }
+  .actions { display: flex; gap: 8px; margin-top: 10px; }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Points Tracker</h1>
+  <div class="totals">
+    <div class="stat"><span class="label">Spend</span><span class="value" id="total-spend">$0.00</span></div>
+    <div class="stat"><span class="label">Points</span><span class="value pts" id="total-points">0</span></div>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>Add Transaction</h2>
+    <div class="field">
+      <label for="txn-card">Card</label>
+      <select id="txn-card"></select>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="txn-category">Category</label>
+        <select id="txn-category"></select>
+      </div>
+      <div class="field">
+        <label for="txn-amount">Amount ($)</label>
+        <input type="number" id="txn-amount" step="0.01" min="0" placeholder="0.00" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="txn-date">Date</label>
+        <input type="date" id="txn-date" />
+      </div>
+      <div class="field">
+        <label for="txn-note">Note (optional)</label>
+        <input type="text" id="txn-note" placeholder="e.g., Starbucks" />
+      </div>
+    </div>
+    <div class="preview" id="txn-preview">Pick a card and category to preview points.</div>
+    <div class="actions">
+      <button id="txn-add">Add Transaction</button>
+    </div>
+
+    <h2 style="margin-top:24px;">Your Cards</h2>
+    <div class="card-list" id="card-list"></div>
+    <details>
+      <summary>+ Add custom card</summary>
+      <div class="rule-editor">
+        <div class="field">
+          <label for="new-card-name">Card name</label>
+          <input type="text" id="new-card-name" placeholder="e.g., Chase Freedom Unlimited" />
+        </div>
+        <div class="field">
+          <label for="new-card-base">Base multiplier (x per $1)</label>
+          <input type="number" id="new-card-base" step="0.5" min="0" value="1" />
+        </div>
+        <label>Category multipliers</label>
+        <div id="new-card-rules"></div>
+        <button class="secondary" id="add-rule-row" type="button">+ Category rule</button>
+        <div class="actions">
+          <button id="save-new-card">Save Card</button>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <section class="panel">
+    <h2>Transactions</h2>
+    <table id="txn-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Card</th>
+          <th>Category</th>
+          <th>Note</th>
+          <th class="num">Amount</th>
+          <th class="num">Points</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="txn-rows"></tbody>
+    </table>
+    <div class="empty" id="txn-empty">No transactions yet. Add one on the left.</div>
+
+    <h2 style="margin-top:24px;">Per-Card Totals</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Card</th>
+          <th class="num">Spend</th>
+          <th class="num">Points</th>
+          <th class="num">Avg x</th>
+        </tr>
+      </thead>
+      <tbody id="summary-rows"></tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+  const CATEGORIES = [
+    "Dining",
+    "Groceries",
+    "Gas",
+    "Travel (Flights)",
+    "Travel (Hotels)",
+    "Travel (Other)",
+    "Streaming",
+    "Online Shopping",
+    "Transit",
+    "Drugstores",
+    "Other"
+  ];
+
+  const DEFAULT_CARDS = [
+    {
+      id: "amex-gold",
+      name: "Amex Gold",
+      base: 1,
+      rules: {
+        "Dining": 4,
+        "Groceries": 4,
+        "Travel (Flights)": 3
+      }
+    },
+    {
+      id: "amex-plat",
+      name: "Amex Platinum",
+      base: 1,
+      rules: {
+        "Travel (Flights)": 5,
+        "Travel (Hotels)": 5
+      }
+    },
+    {
+      id: "csp",
+      name: "Chase Sapphire Preferred",
+      base: 1,
+      rules: {
+        "Dining": 3,
+        "Streaming": 3,
+        "Online Shopping": 3,
+        "Travel (Flights)": 2,
+        "Travel (Hotels)": 2,
+        "Travel (Other)": 2
+      }
+    },
+    {
+      id: "venture-x",
+      name: "Capital One Venture X",
+      base: 2,
+      rules: {
+        "Travel (Flights)": 5,
+        "Travel (Hotels)": 10
+      }
+    },
+    {
+      id: "citi-dc",
+      name: "Citi Double Cash",
+      base: 2,
+      rules: {}
+    }
+  ];
+
+  const STORAGE_KEY = "points-tracker-v1";
+  let state = loadState();
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { cards: DEFAULT_CARDS.slice(), transactions: [] };
+  }
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function pointsFor(card, category, amount) {
+    const mult = (card.rules && card.rules[category]) || card.base || 1;
+    return Math.round(mult * amount);
+  }
+
+  function fmtMoney(n) {
+    return "$" + (Math.round(n * 100) / 100).toFixed(2);
+  }
+  function fmtNum(n) { return n.toLocaleString(); }
+
+  function renderCardSelect() {
+    const sel = document.getElementById("txn-card");
+    sel.innerHTML = state.cards.map(c =>
+      `<option value="${c.id}">${c.name}</option>`).join("");
+  }
+  function renderCategorySelect() {
+    const sel = document.getElementById("txn-category");
+    sel.innerHTML = CATEGORIES.map(c =>
+      `<option value="${c}">${c}</option>`).join("");
+  }
+
+  function renderCards() {
+    const list = document.getElementById("card-list");
+    list.innerHTML = state.cards.map(card => {
+      const rules = Object.entries(card.rules || {})
+        .sort((a, b) => b[1] - a[1])
+        .map(([cat, m]) => `<span class="rule"><strong>${m}x</strong> ${cat}</span>`)
+        .join("");
+      return `
+        <div class="card-item">
+          <div class="card-item-header">
+            <span class="card-item-name">${card.name}</span>
+            <button class="danger" data-del-card="${card.id}">Remove</button>
+          </div>
+          <div class="card-item-summary">Base: <strong>${card.base}x</strong> on everything else</div>
+          <div class="rules">${rules || '<span class="rule">no bonus categories</span>'}</div>
+        </div>
+      `;
+    }).join("");
+    list.querySelectorAll("[data-del-card]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-del-card");
+        if (!confirm("Remove this card? Its transactions will stay but show as 'Unknown card'.")) return;
+        state.cards = state.cards.filter(c => c.id !== id);
+        saveState();
+        renderAll();
+      });
+    });
+  }
+
+  function renderTransactions() {
+    const tbody = document.getElementById("txn-rows");
+    const empty = document.getElementById("txn-empty");
+    if (!state.transactions.length) {
+      tbody.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    const sorted = state.transactions.slice().sort((a, b) =>
+      (b.date + b.id).localeCompare(a.date + a.id));
+    tbody.innerHTML = sorted.map(t => {
+      const card = state.cards.find(c => c.id === t.cardId);
+      const cardName = card ? card.name : "Unknown card";
+      return `
+        <tr>
+          <td>${t.date}</td>
+          <td>${cardName}</td>
+          <td>${t.category}</td>
+          <td>${t.note || ""}</td>
+          <td class="num">${fmtMoney(t.amount)}</td>
+          <td class="num pts">${fmtNum(t.points)}</td>
+          <td><button class="danger" data-del-txn="${t.id}">x</button></td>
+        </tr>
+      `;
+    }).join("");
+    tbody.querySelectorAll("[data-del-txn]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-del-txn");
+        state.transactions = state.transactions.filter(t => t.id !== id);
+        saveState();
+        renderAll();
+      });
+    });
+  }
+
+  function renderSummary() {
+    const tbody = document.getElementById("summary-rows");
+    const totals = {};
+    for (const t of state.transactions) {
+      if (!totals[t.cardId]) totals[t.cardId] = { spend: 0, points: 0 };
+      totals[t.cardId].spend += t.amount;
+      totals[t.cardId].points += t.points;
+    }
+    let totalSpend = 0, totalPoints = 0;
+    const rows = state.cards.map(card => {
+      const t = totals[card.id] || { spend: 0, points: 0 };
+      totalSpend += t.spend;
+      totalPoints += t.points;
+      const avg = t.spend > 0 ? (t.points / t.spend) : 0;
+      return `
+        <tr>
+          <td>${card.name}</td>
+          <td class="num">${fmtMoney(t.spend)}</td>
+          <td class="num pts">${fmtNum(t.points)}</td>
+          <td class="num">${avg.toFixed(2)}x</td>
+        </tr>
+      `;
+    }).join("");
+    tbody.innerHTML = rows;
+
+    for (const cardId in totals) {
+      if (!state.cards.find(c => c.id === cardId)) {
+        totalSpend += totals[cardId].spend;
+        totalPoints += totals[cardId].points;
+      }
+    }
+    document.getElementById("total-spend").textContent = fmtMoney(totalSpend);
+    document.getElementById("total-points").textContent = fmtNum(totalPoints);
+  }
+
+  function renderPreview() {
+    const cardId = document.getElementById("txn-card").value;
+    const category = document.getElementById("txn-category").value;
+    const amount = parseFloat(document.getElementById("txn-amount").value);
+    const preview = document.getElementById("txn-preview");
+    const card = state.cards.find(c => c.id === cardId);
+    if (!card || !category || !isFinite(amount) || amount <= 0) {
+      preview.innerHTML = "Enter an amount to preview points.";
+      return;
+    }
+    const mult = (card.rules && card.rules[category]) || card.base;
+    const pts = pointsFor(card, category, amount);
+    preview.innerHTML = `${fmtMoney(amount)} on <strong>${card.name}</strong> at <strong>${mult}x</strong> = <span class="pts">${fmtNum(pts)} pts</span>`;
+  }
+
+  function renderAll() {
+    renderCardSelect();
+    renderCategorySelect();
+    renderCards();
+    renderTransactions();
+    renderSummary();
+    renderPreview();
+  }
+
+  function addRuleRow(cat = "", mult = "") {
+    const container = document.getElementById("new-card-rules");
+    const div = document.createElement("div");
+    div.className = "rule-editor-row";
+    const catOptions = CATEGORIES.map(c =>
+      `<option value="${c}" ${c === cat ? "selected" : ""}>${c}</option>`).join("");
+    div.innerHTML = `
+      <select>${catOptions}</select>
+      <input type="number" step="0.5" min="0" placeholder="x" value="${mult}" />
+      <button class="danger" type="button">x</button>
+    `;
+    div.querySelector("button").addEventListener("click", () => div.remove());
+    container.appendChild(div);
+  }
+
+  document.getElementById("add-rule-row").addEventListener("click", () => addRuleRow());
+
+  document.getElementById("save-new-card").addEventListener("click", () => {
+    const name = document.getElementById("new-card-name").value.trim();
+    const base = parseFloat(document.getElementById("new-card-base").value) || 1;
+    if (!name) { alert("Give the card a name."); return; }
+    const rules = {};
+    document.querySelectorAll("#new-card-rules .rule-editor-row").forEach(row => {
+      const cat = row.querySelector("select").value;
+      const mult = parseFloat(row.querySelector("input").value);
+      if (cat && isFinite(mult) && mult > 0) rules[cat] = mult;
+    });
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now().toString(36);
+    state.cards.push({ id, name, base, rules });
+    saveState();
+    document.getElementById("new-card-name").value = "";
+    document.getElementById("new-card-base").value = "1";
+    document.getElementById("new-card-rules").innerHTML = "";
+    renderAll();
+  });
+
+  document.getElementById("txn-add").addEventListener("click", () => {
+    const cardId = document.getElementById("txn-card").value;
+    const category = document.getElementById("txn-category").value;
+    const amount = parseFloat(document.getElementById("txn-amount").value);
+    const date = document.getElementById("txn-date").value;
+    const note = document.getElementById("txn-note").value.trim();
+    const card = state.cards.find(c => c.id === cardId);
+    if (!card) { alert("Pick a card."); return; }
+    if (!isFinite(amount) || amount <= 0) { alert("Enter a valid amount."); return; }
+    const points = pointsFor(card, category, amount);
+    const txn = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      cardId, category, amount, date: date || new Date().toISOString().slice(0, 10),
+      note, points
+    };
+    state.transactions.push(txn);
+    saveState();
+    document.getElementById("txn-amount").value = "";
+    document.getElementById("txn-note").value = "";
+    renderAll();
+  });
+
+  ["txn-card", "txn-category", "txn-amount"].forEach(id => {
+    document.getElementById(id).addEventListener("input", renderPreview);
+    document.getElementById(id).addEventListener("change", renderPreview);
+  });
+
+  document.getElementById("txn-date").valueAsDate = new Date();
+  renderAll();
+</script>
+</body>
+</html>
