@@ -313,7 +313,7 @@
     ]},
     { label: "Other", items: [
       "Entertainment", "Education", "Shipping", "Charity", "Taxes",
-      "Foreign Transactions", "Other"
+      "Foreign Transactions", "Apple Pay", "Other"
     ]}
   ];
   const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
@@ -435,8 +435,8 @@
       id: "apple",
       name: "Apple Card",
       currency: "Cash Back",
-      base: 2,
-      rules: {}
+      base: 1,
+      rules: { "Apple Pay": 2 }
     },
     {
       id: "delta-reserve",
